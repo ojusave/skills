@@ -1,129 +1,137 @@
-# Manual Scaffolding (Fallback)
+# Direct SDK Project Setup
 
-Use this path only if `render workflows init` is not available. Follow these steps in order.
+Use this reference to add the Render Workflows SDK directly to an existing codebase or create a minimal workflow service without `render workflows init`. Preserve an existing project's dependency, module, and build conventions. For a new standalone service, prefer adapting the current official [Python examples](https://github.com/render-examples/render-workflows-examples-python) or [TypeScript examples](https://github.com/render-examples/render-workflows-examples-ts) over copying this minimal structure blindly.
 
-## Contents
+## Choose the Language and Boundary
 
-- Step 1: Detect language
-- Step 2: Create the `workflows/` directory
-- Step 3: Install dependencies
-- Step 4: Verify setup
+Use the language requested by the user. Otherwise infer it from the project:
 
-> **IMPORTANT:** Do NOT modify the project's root `package.json` or `requirements.txt`. Do NOT run `npm install <package>` or `pip install <package>` at the project root. The `workflows/` directory is a self-contained service with its own dependency files.
+| Indicators | Language |
+|---|---|
+| `pyproject.toml`, `requirements.txt`, `Pipfile`, or Python source | Python |
+| `package.json`, `tsconfig.json`, or TypeScript source | TypeScript |
 
-> **The official starter templates have likely changed since this skill was written.**
-> Always check the real template before scaffolding:
-> - **Python:** [render-examples/workflows-template-python](https://github.com/render-examples/workflows-template-python)
->
-> If the user already has the SDK installed, inspect it for up-to-date signatures:
-> ```bash
-> # Python: check SDK source
-> SDK_ROOT=$(pip show render_sdk | grep Location | cut -d' ' -f2)/render_sdk
-> head -40 "$SDK_ROOT/__init__.py"
->
-> # TypeScript: check type definitions
-> grep -r "export.*task\|export.*Render" node_modules/@renderinc/sdk/
-> ```
->
-> **Official examples:** [Python](https://github.com/render-oss/sdk/tree/main/python/example) | [TypeScript](https://github.com/render-oss/sdk/tree/main/typescript/examples)
->
-> The inline snippets in this skill are a fallback. The official repos are the source of truth.
+If both ecosystems are present, prefer the language already used by the component that will trigger or own the workflow. Ask only when the choice materially changes the integration.
 
-## Step 1: Detect Language
+Create a self-contained workflow service directory when the workflow has an independent build or deployment boundary. Do not overwrite unrelated root dependency files.
 
-**Principle:** If the user named the language in their prompt, use it directly. Auto-detect from config files next. Only ask if genuinely ambiguous.
+## Python
 
-Check the project for language indicators:
+Minimum files:
 
-| Indicator | Language |
-|-----------|----------|
-| `requirements.txt`, `pyproject.toml`, `Pipfile`, `*.py` | Python |
-| `package.json`, `tsconfig.json`, `*.ts` | TypeScript |
+```text
+workflows/
+|-- main.py
+`-- requirements.txt
+```
 
-If both are present or neither is found, ask the user which language to use.
+`requirements.txt`:
 
-## Step 2: Create the `workflows/` Directory
+```text
+render>=1.0.1
+```
 
-Use the official Render starter templates as the source of truth for file structure and contents:
+`main.py`:
 
-- **Python:** [render-examples/workflows-template-python](https://github.com/render-examples/workflows-template-python)
-- **TypeScript:** [render-examples/workflows-template-ts](https://github.com/render-examples/workflows-template-ts)
-
-Fetch the template contents (clone, download, or read from the repo) and place them in a `workflows/` directory at the project root. At minimum, the directory should contain:
-
-**Python:** `main.py`, `requirements.txt`
-**TypeScript:** `index.ts` (or `main.ts`), `package.json`, `tsconfig.json`
-
-Key patterns to follow from the templates:
-
-**Python entry point** (`main.py`):
 ```python
-from render_sdk import Workflows, Retry
+from render import TaskContext, Workflows
 
-app = Workflows(
-    default_retry=Retry(max_retries=3, wait_duration_ms=1000, backoff_scaling=2.0),
-)
+app = Workflows()
 
 @app.task
-def ping() -> str:
+def ping(_ctx: TaskContext) -> str:
     return "pong"
 
 if __name__ == "__main__":
     app.start()
 ```
 
-**TypeScript entry point** (`index.ts`):
+Install dependencies in an isolated environment:
+
+```bash
+cd workflows
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Use an equivalent activation command on Windows or non-POSIX shells.
+
+## TypeScript
+
+Minimum files:
+
+```text
+workflows/
+|-- src/
+|   `-- main.ts
+|-- package.json
+`-- tsconfig.json
+```
+
+`package.json`:
+
+```json
+{
+  "name": "my-workflow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@renderinc/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.2",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+`src/main.ts`:
+
 ```typescript
-import { task } from "@renderinc/sdk/workflows";
+import { task, type TaskContext } from "@renderinc/sdk/workflows";
 
 task(
-  {
-    name: "ping",
-    retry: { maxRetries: 3, waitDurationMs: 1000, backoffScaling: 2.0 },
-  },
-  function ping(): string {
+  { name: "ping" },
+  function ping(_ctx: TaskContext): string {
     return "pong";
   },
 );
 ```
 
-Each template includes a zero-argument `ping` task so the user can immediately verify the setup works.
+Install dependencies:
 
-## Step 3: Install Dependencies
-
-After all files from Step 2 are created, install dependencies.
-
-**Python:**
 ```bash
-pip install -r workflows/requirements.txt
+cd workflows
+npm install
 ```
 
-**TypeScript:**
+Use the project's existing TypeScript configuration when integrating into an established service. For a standalone service, choose module and compiler settings compatible with the current Node runtime and verify with `npm run typecheck`.
+
+## Verify
+
+From the workflow service directory, start the local task server:
+
 ```bash
-npm install --prefix workflows
+# Python
+render workflows dev -- .venv/bin/python main.py
+
+# TypeScript
+render workflows dev -- npm start
 ```
 
-## Step 4: Verify Setup
+In another terminal:
 
-Check that setup succeeded before handing off:
+```bash
+render workflows tasks list --local -o text
+render workflows start ping --local --input='[]' -o json
+render workflows tasks runs show <task-run-id> --local -o json
+```
 
-- [ ] `workflows/` directory exists with the expected files
-- [ ] Dependencies installed without errors
+Copy the task run ID returned by `workflows start`. If the run is still queued or running, poll `tasks runs show` for a bounded period. Verify that the completed result contains `"pong"`; run creation alone is not sufficient. If an agent starts the server, it should capture the result and stop the server before handing the workspace back.
 
-Then present the user with these verification commands to run in their own terminal:
-
-**Verification checklist:**
-
-- [ ] Start the local task server:
-  - Python: `render workflows dev -- python workflows/main.py`
-  - TypeScript: `render workflows dev -- npx tsx workflows/main.ts`
-- [ ] In a second terminal: `render workflows tasks list --local`
-- [ ] Select `ping`, choose `run`, enter `[]` as input
-- [ ] Verify the result is `"pong"`
-
-Do NOT start the dev server or run test commands yourself. Present the checklist for the user to run.
-
-**If verification fails:**
-- **Task server won't start:** check CLI version (`render --version`, needs 2.11.0+) and start command. See [Troubleshooting > Task Server Issues](troubleshooting.md#task-server-issues).
-- **`ping` task not listed:** ensure the entry point imports the task file. See [Task Registration Issues](troubleshooting.md#task-registration-issues).
-- **Dependency install errors:** confirm you ran install inside `workflows/`, not the project root.
+For deployment, use the workflow directory as the service's root directory and preserve the build/start commands validated locally. The current CLI can generate a `render workflows create` command from `workflows init`; when scaffolding manually, construct that command from the project's actual configuration.

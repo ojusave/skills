@@ -139,7 +139,7 @@ task(
 
 ## Retries and Idempotency
 
-Retries are appropriate only when repeating the task is safe. A task that mutates state should use a deterministic idempotency key, an upsert, or another deduplication mechanism before retries are enabled.
+Tasks retry automatically by default. Before running tasks that send emails, charge payments, or modify external state, use idempotency keys or another deduplication mechanism to prevent duplicate effects.
 
 Python:
 

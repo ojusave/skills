@@ -68,7 +68,9 @@ Inputs:
 
 ## Trigger Local Runs from Application Code
 
-Set:
+For complete Python and TypeScript client scripts with a verified `ping` result, follow [Try It Locally with the SDK](manual-scaffolding.md#try-it-locally-with-the-sdk).
+
+Local SDK calls do not require a Render API key or a deployed workflow. Set local mode in the **calling application's** environment (setting it only on the task server does not configure a separately running client):
 
 ```bash
 export RENDER_USE_LOCAL_DEV=true

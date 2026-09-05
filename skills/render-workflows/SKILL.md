@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires Render SDK 1.x. Local validation requires Render CLI 2.12.0+; optional scaffolding and CLI deployment require Render CLI 2.16.0+.
 metadata:
   author: Render
-  version: "1.1.2"
+  version: "1.1.3"
   category: workflows
 ---
 
@@ -73,7 +73,9 @@ render workflows init --confirm --language node --dir workflows --git=false
 
 Use `--git=false` when scaffolding inside an existing Git repository to avoid creating a nested repository. Other useful options include `--template`, `--install-deps`, and `--install-agent-skill`; verify current behavior in the CLI reference.
 
-## Define and Validate Tasks Locally
+## Try It Locally with the SDK
+
+For a first integration, follow the runnable Python or TypeScript [local SDK walkthrough](references/manual-scaffolding.md#try-it-locally-with-the-sdk): define `ping`, start the local task server, invoke it from a separate client script, and verify the returned `"pong"`. No `init`, deployment, or Render API key is needed for this local example. Set local mode in the calling application process, not only in the task server's environment.
 
 After adding or changing SDK task definitions, use the local development server as the primary validation loop. Start it with the workflow's actual start command:
 

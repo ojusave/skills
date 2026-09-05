@@ -15,6 +15,8 @@ If both ecosystems are present, prefer the language already used by the componen
 
 Create a self-contained workflow service directory when the workflow has an independent build or deployment boundary. Do not overwrite unrelated root dependency files.
 
+In an existing application, add a dedicated workflow entrypoint and run it separately from the web server. Keep task registration out of the client script and preserve the application's start command; add a script such as `workflows:start` for the workflow process.
+
 ## Python
 
 Minimum files:
@@ -77,13 +79,14 @@ workflows/
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/main.ts",
+    "workflows:start": "tsx src/main.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@renderinc/sdk": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "tsx": "^4.20.2",
     "typescript": "^5.0.0"
   }
@@ -103,35 +106,103 @@ task(
 );
 ```
 
-Install dependencies:
+For this standalone example, use Node.js 20 or later and this `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"]
+}
+```
+
+Install dependencies and check the TypeScript source:
 
 ```bash
 cd workflows
 npm install
+npm run typecheck
 ```
 
-Use the project's existing TypeScript configuration when integrating into an established service. For a standalone service, choose module and compiler settings compatible with the current Node runtime and verify with `npm run typecheck`.
+When integrating into an established service, preserve its TypeScript configuration and use Node type definitions compatible with its runtime. Adapt the dedicated workflow script to its existing tooling.
 
-## Verify
+## Try It Locally with the SDK
 
-From the workflow service directory, start the local task server:
+Use the `ping` task and dependencies defined above for your chosen language. No deployment, Render API key, or `render workflows init` is needed. The task server and calling script run in separate processes.
+
+### Python
+
+Add `client.py` next to `main.py`:
+
+```python
+from render import Render
+
+render = Render()
+result = render.workflows.run_task("ping", [])
+assert result.results == ["pong"], result
+print(result.results[0])
+```
+
+In terminal 1, from the workflow directory, start the task server:
 
 ```bash
-# Python
 render workflows dev -- .venv/bin/python main.py
-
-# TypeScript
-render workflows dev -- npm start
 ```
 
-In another terminal:
+In terminal 2, from the same directory, enable local mode for the **client process** and invoke the task:
+
+```bash
+RENDER_USE_LOCAL_DEV=true .venv/bin/python client.py
+```
+
+### TypeScript
+
+Add `src/client.ts`:
+
+```typescript
+import assert from "node:assert/strict";
+import { Render } from "@renderinc/sdk";
+
+const render = new Render();
+const result = await render.workflows.runTask("ping", []);
+assert.deepEqual(result.results, ["pong"]);
+console.log(result.results[0]);
+```
+
+In terminal 1, from the workflow directory:
+
+```bash
+npm run typecheck
+render workflows dev -- npm run workflows:start
+```
+
+In terminal 2, from the same directory:
+
+```bash
+RENDER_USE_LOCAL_DEV=true npx tsx src/client.ts
+```
+
+### Confirm the Result
+
+Each client waits for completion, checks the result, and prints `pong`. Local calls use the registered task name `ping`; deployed calls use `{workflow-slug}/ping`. The empty array supplies zero task arguments; do not pass `TaskContext`. The external client's `results` field is an array, so this task's returned string is at index `0`.
+
+The commands above use POSIX environment syntax. On other shells, set `RENDER_USE_LOCAL_DEV=true` in the client environment before running the script. For custom ports, set the matching `RENDER_LOCAL_DEV_URL` there too; see [local-development.md](local-development.md#trigger-local-runs-from-application-code). Keep these local settings out of deployed application environments.
+
+If the client fails or stays pending, inspect local runs instead of repeatedly starting new ones:
 
 ```bash
 render workflows tasks list --local -o text
-render workflows start ping --local --input='[]' -o json
+render workflows tasks runs list ping --local -o text
 render workflows tasks runs show <task-run-id> --local -o json
 ```
 
-Copy the task run ID returned by `workflows start`. If the run is still queued or running, poll `tasks runs show` for a bounded period. Verify that the completed result contains `"pong"`; run creation alone is not sufficient. If an agent starts the server, it should capture the result and stop the server before handing the workspace back.
+For this smoke test, bound the client wait (for example, one minute), inspect errors if it does not complete, and stop the local task server after verification when an agent started it. Run creation alone is not successful validation.
 
 For deployment, use the workflow directory as the service's root directory and preserve the build/start commands validated locally. The current CLI can generate a `render workflows create` command from `workflows init`; when scaffolding manually, construct that command from the project's actual configuration.

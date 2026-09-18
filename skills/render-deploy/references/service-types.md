@@ -411,17 +411,54 @@ For web services and private services, `host` provides the internal hostname and
 
 ---
 
+## Workflows (`type: workflow`)
+
+### Purpose
+
+Distributed long-running tasks with managed retries. Render provisions compute per task run.
+
+### Languages
+
+TypeScript and Python.
+
+### Key Characteristics
+
+- **No public URL**: No inbound hostname; workflows are not HTTP services
+- **No service plan**: Never set `plan` on a workflow service; compute is chosen per task in code
+- **Triggered via SDK/API**: Application code starts runs; the service has no public endpoint
+- **Managed retries**: Task runs retry according to the SDK configuration
+
+### Contrast with workers
+
+A worker is a long-running process you operate (queue consumer, Celery, Sidekiq). A workflow service registers tasks; each run is provisioned independently.
+
+### Required Configuration
+
+```yaml
+type: workflow
+name: my-workflows
+runtime: node
+region: oregon
+startCommand: npm start
+```
+
+Do not set `plan` on a workflow service.
+
+For SDK task definitions, local development, and triggering runs, use the **render-workflows** skill. Do not treat this section as an SDK tutorial.
+
+---
+
 ## Comparison Table
 
-| Feature | Web | Worker | Cron | Static | Private |
-|---------|-----|--------|------|--------|---------|
-| Public URL | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ❌ No |
-| Port Binding | ✅ Required | ❌ Not needed | ❌ Not needed | ❌ N/A | ✅ Required |
-| HTTP Health Checks | ✅ Yes | ❌ No | ❌ No | ❌ N/A | ❌ No |
-| Runtime | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes |
-| Persistent | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
-| Scaling | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
-| Use Case | HTTP servers | Background jobs | Scheduled tasks | Static files | Internal services |
+| Feature | Web | Worker | Cron | Static | Private | Workflow |
+|---------|-----|--------|------|--------|---------|----------|
+| Public URL | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ❌ No | ❌ No |
+| Port Binding | ✅ Required | ❌ Not needed | ❌ Not needed | ❌ N/A | ✅ Required | ❌ Not needed |
+| HTTP Health Checks | ✅ Yes | ❌ No | ❌ No | ❌ N/A | ❌ No | ❌ No |
+| Runtime | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ node or python |
+| Persistent | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ❌ Per-task runs |
+| Scaling | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | Per-task compute |
+| Use Case | HTTP servers | Background jobs | Scheduled tasks | Static files | Internal services | Distributed tasks |
 
 ## Choosing the Right Service Type
 
@@ -449,3 +486,8 @@ For web services and private services, `host` provides the internal hostname and
 - Service only accessed by other services
 - Want internal-only communication
 - Building microservice architectures
+
+**Use Workflows when:**
+- Running distributed long-running tasks with managed retries
+- The app defines Python `@app.task` from `render`, or TypeScript `task()` from `@renderinc/sdk/workflows`
+- You need `type: workflow` in a Blueprint (MCP cannot create this service type)

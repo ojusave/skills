@@ -5,7 +5,7 @@ Complete reference for render.yaml Blueprint files. Blueprints define your infra
 ## Overview
 
 A Blueprint is a YAML file (typically `render.yaml`) placed in your repository root that describes:
-- Services (web, worker, cron, static, private)
+- Services (web, worker, cron, static, private, workflow)
 - Datastores (PostgreSQL, Key Value)
 - Environment variables and secrets
 - Scaling and resource configuration
@@ -194,6 +194,43 @@ services:
     startCommand: ./bin/app
 ```
 
+### Workflows (`type: workflow`)
+
+Distributed long-running tasks with managed retries. No public URL and no inbound hostname. Valid in render.yaml since 2026-09-16.
+
+**Required fields:**
+- `type`: Must be `workflow`
+- `name`: Unique service identifier
+- `runtime`: `node` or `python`
+- `region`: Deployment region
+- `startCommand`: Command that starts the workflow service
+- `buildCommand`: Build command. Validation fails with `buildCommand is required for non-docker workflows` without it, even though the published schema omits it from `required`
+- `repo`: Git repository URL. Validation fails with `repo is required for git-based services` on a workflow even when run from inside that repository, unlike `web` and other Git-based types
+
+**Optional fields:**
+- `branch`: Git branch to deploy
+- `rootDir`: Service root directory
+- `buildFilter`: Path filters for build triggers
+- `autoDeployTrigger`: Auto-deploy behavior
+- `envVars`: Environment variables array
+
+**Never set `plan` on a workflow service.** Compute is chosen per task in application code.
+
+**Example:**
+```yaml
+services:
+  - type: workflow
+    name: my-workflows
+    runtime: node
+    region: oregon
+    repo: https://github.com/render-examples/render-workflows-examples-ts
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: node dist/main.js
+```
+
+For SDK details, use the **render-workflows** skill.
+
 ## Runtimes
 
 ### Native Runtimes
@@ -276,7 +313,7 @@ Available instance types for web, private, and worker services:
 | `pro max` | 16 GB | 4 | Web, private, and worker services |
 | `pro ultra` | 32 GB | 8 | Web, private, and worker services |
 
-**Default to `plan: free` for non-static web services, Key Value, and Postgres. Static sites do not have a plan. Use `plan: starter` for other service types that support a plan, unless the user specifies otherwise.**
+**Default to `plan: free` for non-static web services, Key Value, and Postgres. Static sites do not have a plan. Never set `plan` on a workflow service. Use `plan: starter` for other service types that support a plan, unless the user specifies otherwise.**
 
 ## Regions
 
@@ -711,7 +748,7 @@ render blueprint validate
 
 ## Best Practices
 
-1. **Default to `plan: free` for non-static web services, Key Value, and Postgres. Static sites do not have a plan. Use `plan: starter` for other service types that support a plan** - Let users upgrade if needed
+1. **Default to `plan: free` for non-static web services, Key Value, and Postgres. Static sites do not have a plan. Never set `plan` on a workflow service. Use `plan: starter` for other service types that support a plan** - Let users upgrade if needed
 2. **Mark all secrets with `sync: false`** - Never hardcode sensitive values
 3. **Use `fromDatabase` for database URLs** - Automatic internal connection strings
 4. **Add health check endpoints** - Faster deployment detection

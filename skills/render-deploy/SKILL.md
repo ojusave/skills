@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a Git repository on GitHub, GitLab, or Bitbucket for Blueprint/MCP flows. Blueprint can reference a prebuilt image but render.yaml must live in the repo. Render CLI recommended for Blueprint validation; MCP or CLI required for operations.
 metadata:
   author: Render
-  version: "1.1.0"
+  version: "1.2.0"
   category: deployment
 ---
 
@@ -66,7 +66,7 @@ Use this decision rule by default unless the user requests a specific method. An
 
 **Use Direct Creation (MCP) when ALL are true:**
 - Single service (one web app or one static site)
-- No separate worker/cron services
+- No separate worker/cron/workflow services
 - No attached databases or Key Value
 - Simple env vars only (no shared env groups)
 If this path fits and MCP isn't configured yet, stop and guide MCP setup before proceeding.
@@ -74,11 +74,14 @@ If this path fits and MCP isn't configured yet, stop and guide MCP setup before 
 **Use Blueprint when ANY are true:**
 - Multiple services (web + worker, API + frontend, etc.)
 - Databases, Key Value, or other datastores are required
-- Cron jobs, background workers, or private services
+- Cron jobs, background workers, private services, or workflows
+- The app defines Render Workflows tasks (MCP cannot create `type: workflow`)
 - You want reproducible IaC or a render.yaml committed to the repo
 - Monorepo or multi-env setup that needs consistent configuration
 
-If unsure, ask a quick clarifying question, but default to Blueprint for safety. For a single service, strongly prefer Direct Creation via MCP and guide MCP setup if needed.
+MCP has `create_web_service` and `create_static_site`, not `create_workflow`. If the app has workflow tasks, use Blueprint even if the workflow is the only service. Detect workflows by Python `@app.task` from `render`, or TypeScript `task()` from `@renderinc/sdk/workflows`.
+
+If unsure, ask a quick clarifying question, but default to Blueprint for safety. For a single web or static site with no workflow tasks, strongly prefer Direct Creation via MCP and guide MCP setup if needed.
 
 ## Prerequisites Check
 
@@ -178,9 +181,10 @@ Complete specification: [references/blueprint-spec.md](references/blueprint-spec
 **Key Points:**
 - Always use `plan: free` for non-static web services, key value, and postgres unless user specifies otherwise. Static sites do not have a plan.
 - Always use `plan: starter` for other service types that support a plan unless user specifies otherwise.
+- Never set `plan` on a `type: workflow` service.
 - Include ALL environment variables the app needs
 - Mark secrets with `sync: false` (user fills these in Dashboard)
-- Use appropriate service type: `web`, `worker`, `cron`, `keyvalue`, or `pserv` (`type: web` with `runtime: static` for static sites)
+- Use appropriate service type: `web`, `worker`, `cron`, `workflow`, `keyvalue`, or `pserv` (`type: web` with `runtime: static` for static sites)
 - Use appropriate runtime: [references/runtimes.md](references/runtimes.md)
 
 **Basic Structure:**
@@ -210,6 +214,7 @@ databases:
 - `web`: HTTP services, APIs, web applications (publicly accessible)
 - `worker`: Background job processors (not publicly accessible)
 - `cron`: Scheduled tasks that run on a cron schedule
+- `workflow`: distributed tasks, no public URL, no service plan, trigger via SDK/API
 - `pserv`: Private services (internal only, within same account and region)
 - `keyvalue`: Redis-compatible key-value store
 

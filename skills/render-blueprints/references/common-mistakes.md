@@ -100,6 +100,36 @@ Symptoms, causes, and fixes for frequent `render.yaml` errors.
 
 ---
 
+## 10. Putting `plan` on a workflow service
+
+**Mistake:** Setting `plan:` on a `type: workflow` service.
+
+**Effect:** `plan` is not a valid workflow field. Task compute is per-task in code, not a service-level plan.
+
+**Fix:** Omit `plan` on workflow services. Configure compute in task code. See **render-workflows**.
+
+---
+
+## 11. Expecting PR previews to clone the workflow
+
+**Mistake:** Assuming preview environments replicate `type: workflow` services the way they replicate web, worker, or other services.
+
+**Effect:** Preview environments skip workflow services. Other services in the Blueprint still replicate.
+
+**Fix:** Do not expect a per-PR workflow clone. There is no `previews.generation` override to force one.
+
+---
+
+## 12. Reusing a Blueprint-managed workflow name
+
+**Mistake:** Using a workflow `name` that already belongs to a Blueprint-managed workflow in the workspace.
+
+**Effect:** Render rejects the Blueprint.
+
+**Fix:** Choose a unique workflow `name` that is not already used by a Blueprint-managed workflow in the workspace.
+
+---
+
 ## Quick prevention
 
 1. `render blueprints validate` (CLI v2.7.0+).

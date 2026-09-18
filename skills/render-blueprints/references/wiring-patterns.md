@@ -196,6 +196,7 @@ envVarGroups:
 
 ## Edge Cases
 
+- **Workflows (`type: workflow`):** A workflow can consume `fromDatabase`, `fromService`, and `fromGroup` via its own `envVars` (those vars apply to every task run). Other services cannot `fromService` a workflow for `host` or `hostport`: workflows have no inbound hostname.
 - **sync: false only prompts on initial Blueprint setup.** On subsequent syncs, existing `sync: false` values are preserved. Adding a new `sync: false` var to an existing Blueprint does not prompt.
 - **sync: false is excluded from preview environments.** Users must set these values manually for each preview.
 - **sync: false is invalid in envVarGroups.** It is silently ignored if used in a group definition.

@@ -43,6 +43,14 @@ The only supported service-level generation values are `manual` and `automatic`.
 
 ---
 
+## Workflows (`type: workflow`)
+
+Preview environments skip workflow services. Other services in the same Blueprint still replicate.
+
+There is no `previews.generation` (or other preview knob) that forces a workflow into a preview stack.
+
+---
+
 ## Preview instance types
 
 - For web services, private services, background workers, and cron jobs, set **`previews.plan`**. Despite sharing an object with the service-preview generation field, this field controls the instance type used in preview environments.

@@ -7,7 +7,7 @@ description: >-
   for multi-service apps, configure preview environments, validate against
   the schema, or fix immutable field errors. Trigger terms: render.yaml,
   Blueprint, IaC, fromDatabase, fromService, envVarGroups, previews, projects,
-  environments.
+  environments, type: workflow.
 license: MIT
 compatibility: >-
   Git repository on GitHub, GitLab, or Bitbucket for Blueprint sync. Render CLI
@@ -15,7 +15,7 @@ compatibility: >-
   against the public JSON Schema URL below.
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: configuration
 ---
 
@@ -42,7 +42,7 @@ For end-to-end deploy flows and MCP/CLI operations, see **render-deploy**. For e
 
 | Key | Purpose |
 |-----|---------|
-| `services` | Web, worker, cron, private service, Key Value, static (via `web` + `runtime: static`) |
+| `services` | Web, worker, cron, private service, Key Value, static (via `web` + `runtime: static`), workflow |
 | `databases` | Managed PostgreSQL instances |
 | `envVarGroups` | Reusable env var sets attached to services |
 | `projects` | Optional grouping; contains `environments` and service lists |
@@ -87,6 +87,24 @@ services:
 | `worker` | Long-running background process |
 | `cron` | Scheduled job (`schedule` required) |
 | `keyvalue` | Managed Key Value (Redis-compatible); alias **`redis`** accepted in Blueprints |
+| `workflow` | Distributed task runner (Python or Node); no service-level plan; compute is per task in code |
+
+```yaml
+services:
+  - type: workflow
+    name: my-workflow
+    runtime: python
+    region: oregon
+    repo: https://github.com/render-examples/render-workflows-examples-python
+    branch: main
+    rootDir: hello-world
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+```
+
+Set `repo` explicitly on workflows. `render blueprints validate` errors with `repo is required for git-based services` for a workflow even when run from inside that repository, which is not how `web` and other Git-based types behave.
+
+Task definitions, SDK usage, and per-task compute: see **render-workflows**.
 
 ## Runtimes
 
@@ -199,7 +217,7 @@ Top-level `previews` controls Blueprint preview environments:
 - **`previews.generation`**: `off` (default), `manual`, or `automatic`
 - **`previews.expireAfterDays`**: Auto-delete preview stacks after N days
 
-Do not confuse preview environments with service previews. A service-level `previews.generation` setting controls that service's independent pull request previews and does **not** override preview-environment generation; it accepts only `manual` or `automatic`, and omission disables service previews. Within the same service-level object, `previews.plan` and `previews.numInstances` size the service in preview environments. Key Value and Postgres use `previewPlan` instead. Limitations: autoscaling behavior, `sync: false` vars, and flexible database instance constraints—see `references/preview-environments.md`.
+Do not confuse preview environments with service previews. A service-level `previews.generation` setting controls that service's independent pull request previews and does **not** override preview-environment generation; it accepts only `manual` or `automatic`, and omission disables service previews. Within the same service-level object, `previews.plan` and `previews.numInstances` size the service in preview environments. Key Value and Postgres use `previewPlan` instead. Preview environments skip workflow services (`type: workflow`); other services still replicate. Limitations: autoscaling behavior, `sync: false` vars, and flexible database instance constraints: see `references/preview-environments.md`.
 
 ## Validation
 
@@ -262,3 +280,4 @@ Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `aut
 - **render-deploy** — Deploy flows, Blueprint vs direct create, MCP/deeplinks
 - **render-env-vars** — Env var strategy, secrets, Dashboard vs Blueprint
 - **render-docker** — Dockerfile-backed services and image runtime nuances
+- **render-workflows** — Distributed task runners (`type: workflow`), SDK, tasks, and per-task compute

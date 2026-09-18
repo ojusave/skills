@@ -71,6 +71,37 @@ Applies broadly to `web`, `pserv`, `worker`, `cron`, and often `keyvalue` where 
 
 ---
 
+## Workflow (`type: workflow`)
+
+Workflows are not covered by the common-fields table above. `plan`, `disk`, `scaling`, and other compute-service fields do not apply.
+
+**Required:** `type`, `name`, `runtime`, `region`, `startCommand`, and in practice `buildCommand` and `repo`.
+
+The published schema's `required` array lists only the first five, but Render's validator also rejects a workflow missing `buildCommand` (`buildCommand is required for non-docker workflows`) or `repo` (`repo is required for git-based services`). Always emit both.
+
+**`runtime`:** `node` or `python` only. This is narrower than `render workflows create --runtime`, which also accepts `go`, `ruby`, and `elixir`. Workflows in those runtimes cannot be declared in a Blueprint.
+
+**`region`:** Required.
+
+| Field | Notes |
+|-------|--------|
+| `type` | Must be `workflow`. |
+| `name` | Unique among services in scope. |
+| `runtime` | `node` or `python` only. |
+| `region` | Required. |
+| `startCommand` | Process that starts the workflow service. |
+| `repo` | Git repository URL. Set it explicitly: `render blueprints validate` errors with `repo is required for git-based services` on a workflow even when run from inside that repository, unlike `web` and other Git-based types. |
+| `branch` | Git branch to deploy. |
+| `buildCommand` | Build step(s). Required in practice: validation fails with `buildCommand is required for non-docker workflows` without it. |
+| `rootDir` | Subdirectory for repo context. |
+| `buildFilter` | Limit builds to path changes (see [buildFilter](#buildfilter)). |
+| `autoDeployTrigger` | `commit`, `checksPass`, or `off`. |
+| `envVars` | Applied to every task run. |
+
+**Invalid fields** (not in the schema; do not set): `plan`, `previewPlan`, `disk`, `scaling`, `numInstances`, `healthCheckPath`, `domains`, Docker fields (`dockerfilePath`, `dockerContext`, `dockerCommand`, `image`, `registryCredential`). Task compute is configured per task in code, not via a service-level `plan`.
+
+---
+
 ## Database fields (`databases`)
 
 | Field | Notes |

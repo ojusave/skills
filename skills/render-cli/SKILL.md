@@ -9,10 +9,10 @@ description: >-
   render ssh, render psql, render blueprints validate, render skills,
   RENDER_API_KEY, non-interactive, CI/CD deploy.
 license: MIT
-compatibility: Render CLI v2.7.0+ (Homebrew, Linux/macOS, direct download)
+compatibility: Render CLI v2.7.0+ (Homebrew, Linux/macOS, direct download). Workflows scaffolding wants CLI 2.12+ (see render-workflows).
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: operations
 ---
 
@@ -79,7 +79,8 @@ render workspace set
 | `render logs -r [SVC]` | View logs | `--tail` for streaming |
 | `render psql [DB]` | Open psql session | `-c "SQL"`, `-o json`, `-- --csv` |
 | `render ssh [SVC]` | SSH into running instance | `--ephemeral` / `-e` for isolated shell |
-| `render blueprints validate` | Validate `render.yaml` | Defaults to `./render.yaml` |
+| `render blueprints validate` | Validate `render.yaml` (accepts `type: workflow`) | Defaults to `./render.yaml` |
+| `render workflows init\|dev\|tasks` | Scaffold, local-dev, and list workflow tasks | See **render-workflows** |
 | `render skills [install\|update\|list]` | Manage agent skills | — |
 | `render workspaces` | List workspaces | `-o json` |
 
@@ -174,3 +175,4 @@ Override with `RENDER_CLI_CONFIG_PATH` env var.
 - **render-blueprints** — `render.yaml` authoring and validation
 - **render-postgres** — Database connections, `render psql` usage
 - **render-debug** — Using `render logs` and `render ssh` for troubleshooting
+- **render-workflows** — `render workflows init`, `dev`, and `tasks`

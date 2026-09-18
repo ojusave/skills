@@ -10,7 +10,7 @@ license: MIT
 compatibility: Render web services, private services, and background workers
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: operations
 ---
 
@@ -106,6 +106,8 @@ plan: standard
 ```
 
 Do not rely on `numInstances` to cap autoscaling when a `scaling` block is present—**autoscaling takes precedence**. Preview behavior for scaling is detailed in `references/autoscaling-guide.md`.
+
+Do **not** put `plan`, `numInstances`, or `scaling` on `type: workflow`. Workflow concurrency and compute are workspace and task settings, not service-level scaling fields.
 
 ## References
 

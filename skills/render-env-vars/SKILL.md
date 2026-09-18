@@ -9,7 +9,7 @@ license: MIT
 compatibility: Render Dashboard, CLI, or MCP tools
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: configuration
 ---
 
@@ -89,6 +89,8 @@ Full syntax, examples, and edge cases: `references/wiring-reference.md`. Authori
 | `fromDatabase` | Inject DB fields (`connectionString`, `host`, `port`, `user`, `password`, `database`) |
 | `fromService` | Key Value: `type: keyvalue` + properties; private/web: `host`, `hostport`, or `envVarKey` |
 | `fromGroup` | Link all vars from a named group |
+
+`envVars` on `type: workflow` apply to **every task run**. `RENDER_API_KEY` is the usual secret for tasks that trigger other workflows (`sync: false`). Do not invent `fromService` `host` wiring onto a workflow: workflows are outbound-only and have no inbound hostname.
 
 ## Platform-Injected Variables
 

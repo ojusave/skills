@@ -12,7 +12,7 @@ license: MIT
 compatibility: Render background worker services
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: compute
 ---
 
@@ -59,9 +59,10 @@ See `references/queue-framework-setup.md` for minimal app + YAML examples.
 | Need | Use | Why |
 |------|-----|-----|
 | Always-on queue consumer | **Background Worker** | Polls continuously; long-lived process |
-| Periodic scheduled task | **Cron Job** | Runs on a schedule, **exits**; **12h max** per run |
-| Distributed parallel compute | **Workflow** | Each run gets its own instance; fan-out patterns |
-| High-volume or bursty jobs | **Workflow** | Scales per run without a continuously running worker instance |
+| Fire a command on a clock and exit | **Cron Job** | Runs on a schedule, **exits**; **12h max** per run |
+| Fan-out / DAG / managed retries up to 24h | **Workflow** | Orchestrated steps with platform retries; not a queue consumer |
+
+All three are Blueprint service types and can live in the same `render.yaml`. Do not replace a healthy Redis-backed worker with a workflow unless you need managed fan-out, DAGs, or long retries.
 
 ## Graceful Shutdown
 
@@ -114,3 +115,4 @@ Optional: **`maxShutdownDelaySeconds`** on the worker service for longer drainin
 - **render-blueprints** — Full `render.yaml` schema, `fromService`, projects
 - **render-networking** — Private URLs, what can call what
 - **render-scaling** — Worker plans, instance counts, limits
+- **render-workflows** — Fan-out, DAGs, and managed retries (not a Redis worker replacement)

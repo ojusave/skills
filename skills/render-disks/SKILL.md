@@ -12,7 +12,7 @@ license: MIT
 compatibility: Render paid web services, private services, and background workers
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: storage
 ---
 
@@ -41,6 +41,7 @@ These constraints affect architecture decisions. Understand them **before** atta
 | **Runtime access only** | Disk is not available during `buildCommand` or `preDeployCommand` (those run on separate compute) |
 | **Not accessible from other services** | Only the attached service can read/write the disk |
 | **Not available on cron jobs** | Attach to a web service, private service, or background worker instead |
+| **Not available on workflow services** | Same family as cron. Keep durable state in Postgres, Key Value, or object storage |
 | **Not available on one-off jobs** | One-off jobs run on separate compute without disk access |
 | **Can increase size, cannot decrease** | Start small and grow as needed |
 

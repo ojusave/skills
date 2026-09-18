@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires Render MCP tools or CLI
 metadata:
   author: Render
-  version: "1.1.0"
+  version: "1.2.0"
   category: debugging
 ---
 
@@ -66,6 +66,8 @@ Look for services with failed status. Get details:
 ```
 get_service(serviceId: "<id>")
 ```
+
+If the failing service is a **Workflow**, check workflow deploy/build logs like other Git-backed services. Task-run failures show up in Dashboard run history and SDK errors, not HTTP health checks or `PORT` binding.
 
 ### Step 2: Retrieve Logs
 
@@ -189,6 +191,7 @@ Pre-built debugging sequences for common scenarios:
 | App slow | `get_metrics(http_latency)` → `get_metrics(cpu)` → `query_postgres` |
 | DB connection | `list_postgres` → `get_metrics(connections)` → `query_postgres` |
 | Post-deploy check | `list_deploys` → `list_logs(error)` → `get_metrics` |
+| Workflow task failed | Deploy/build logs for the workflow service; Dashboard run history / SDK errors (not health checks or `PORT`) |
 
 Detailed workflows: [references/quick-workflows.md](references/quick-workflows.md)
 

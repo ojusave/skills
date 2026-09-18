@@ -9,17 +9,17 @@ description: >-
   optimizing Docker builds on Render.
 license: MIT
 compatibility: >-
-  Any Render compute service (web, private, worker, cron) with runtime: docker
-  or runtime: image.
+  Web, private, worker, and cron services with runtime: docker or runtime: image.
+  Not applicable to type: workflow, which supports native python and node only.
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: deployment
 ---
 
 # Render Docker Deployments
 
-Render uses **BuildKit** for Docker builds. All compute service types that support custom runtimes can use **`runtime: docker`** (build from a Dockerfile in the repo) or **`runtime: image`** (pull a prebuilt image; no Dockerfile build on Render). Deeper patterns and copy-paste templates live under `references/`.
+Render uses **BuildKit** for Docker builds. Web, private, worker, and cron services can use **`runtime: docker`** (build from a Dockerfile in the repo) or **`runtime: image`** (pull a prebuilt image; no Dockerfile build on Render). Do not author `runtime: docker` or `runtime: image` for `type: workflow` unless the Blueprint schema later allows it: native Blueprint runtimes for workflows are **`python`** and **`node`** only. Deeper patterns and copy-paste templates live under `references/`.
 
 ## When to Use
 

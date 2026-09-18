@@ -12,7 +12,7 @@ license: MIT
 compatibility: Render MCP server (hosted at mcp.render.com)
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: operations
 ---
 
@@ -128,6 +128,8 @@ All MCP operations run against the active workspace.
 
 ## Tool Catalog
 
+MCP cannot provision Workflows. There is no `create_workflow` tool. Create workflow services via a Blueprint (`type: workflow`) or the Dashboard. See **render-workflows**.
+
 ### Service management
 
 | Tool | Purpose |
@@ -220,3 +222,4 @@ See `references/troubleshooting.md` for connection errors, auth failures, timeou
 - **render-debug** — Debug failures using MCP logs and metrics
 - **render-monitor** — Monitor health using MCP metrics
 - **render-cli** — CLI alternative when MCP is unavailable
+- **render-workflows** — Create workflows via Blueprint or Dashboard (MCP cannot provision them)

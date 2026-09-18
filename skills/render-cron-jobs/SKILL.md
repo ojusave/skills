@@ -12,7 +12,7 @@ license: MIT
 compatibility: Render cron job services
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: compute
 ---
 
@@ -83,6 +83,29 @@ services:
 - **`schedule`**: standard five-field cron (`minute hour day-of-month month day-of-week`), **UTC**.
 - **`buildCommand`** / **`startCommand`**: same roles as other non-Docker services; Docker images use image + start command as configured for image-backed crons.
 - **`envVars`**: same patterns as web services and workers (secrets, linked databases, etc.).
+
+Cron owns the **schedule**. Pair it with a **workflow** in the same Blueprint when the job should fan out or retry as a DAG. The workflow has **no** `schedule` field (and no service-level `plan`).
+
+```yaml
+services:
+  - type: cron
+    name: nightly-trigger
+    runtime: python
+    region: oregon
+    schedule: "0 2 * * *" # UTC; must be quoted in YAML
+    buildCommand: pip install -r requirements.txt
+    startCommand: python trigger.py
+
+  - type: workflow
+    name: nightly-pipeline
+    runtime: python
+    region: oregon
+    repo: https://github.com/render-examples/render-workflows-examples-python
+    branch: main
+    rootDir: hello-world
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+```
 
 **YAML note**: the `schedule` value **must be quoted** so characters like `*` are not parsed as YAML aliases or flow syntax.
 

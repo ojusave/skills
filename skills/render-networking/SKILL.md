@@ -10,7 +10,7 @@ license: MIT
 compatibility: Render services in the same region and workspace
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: networking
 ---
 
@@ -53,7 +53,7 @@ If either differs, private DNS and internal routing will not connect those servi
 
 **Free-tier Web Services:** They may **send** private traffic to other services, but they **cannot receive** inbound private traffic. Plan upgrades or topology changes apply if a free web service must accept private connections.
 
-Workers, crons, and workflow runs initiate outbound connections (e.g., to internal URLs or private service hostnames) but are **not** reachable by internal hostname for inbound calls.
+Workers, crons, and workflow task runs can **dial** other in-region services (Postgres, Key Value, private services, internal web URLs). Nothing can dial a workflow run: there is no inbound hostname. Never generate `fromService` with `type: workflow` and `property: host`.
 
 ## Internal Addresses
 

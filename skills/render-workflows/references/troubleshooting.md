@@ -208,6 +208,15 @@ To release a new version explicitly and wait for the outcome:
 render workflows versions release <workflow-id> --wait
 ```
 
-### Blueprint behavior is unclear
+### Blueprint sync fails or the workflow is missing from a preview
 
-Blueprint support for Workflows is evolving. Check the current [Workflows FAQ](https://render.com/docs/workflows#faq), [Blueprint specification](https://render.com/docs/blueprint-spec), CLI version, and public changelog before generating or modifying `render.yaml` for a workflow. Do not rely on a cached claim of support or non-support.
+Workflows are valid Blueprint services (`type: workflow`). Common failures:
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Schema / validate error on `plan` | Service-level `plan` is not allowed on workflows | Remove `plan`. Set compute on the task in code. |
+| Workflow deploys but behaves unexpectedly with `runtime: docker` | Workflow runtimes are `python` and `node` only. `render blueprints validate` currently accepts `runtime: docker` on a workflow even though the published schema rejects it, so a passing validate is not proof the runtime is supported | Use `runtime: python` or `runtime: node`. Validate against `https://render.com/schema/render.yaml.json` rather than trusting the CLI result alone |
+| Preview stack has no workflow | Preview environments skip workflows | Expected. Other services still replicate. Trigger tasks against the non-preview workflow or deploy the workflow separately. |
+| Blueprint rejected for duplicate name | A Blueprint-managed workflow with that `name` already exists in the workspace | Rename the service, or adopt the existing resource instead of creating a second one |
+
+Do not copy the stale Workflows FAQ bullet that says Blueprints cannot manage workflows. Confirm against the [changelog](https://render.com/changelog/added-blueprint-support-for-render-workflows) and `https://render.com/schema/render.yaml.json`.

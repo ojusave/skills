@@ -1,11 +1,20 @@
 ---
 name: render-workflows
-description: Build, validate locally, deploy, and troubleshoot Render Workflows with the current Python or TypeScript SDK. Use for defining or chaining tasks, integrating the SDK into an existing project, running tasks with the local development server, optionally scaffolding a starter, triggering runs from application code, and releasing workflows.
+description: >-
+  Build, validate locally, deploy, and troubleshoot Render Workflows with the
+  current Python or TypeScript SDK. Use for defining or chaining tasks,
+  integrating the SDK into an existing project, running tasks with the local
+  development server, optionally scaffolding a starter, authoring
+  "type: workflow" in render.yaml, triggering runs from application code, and
+  releasing workflows.
 license: MIT
-compatibility: Requires Render SDK 1.x. Local validation requires Render CLI 2.12.0+; optional scaffolding and CLI deployment require Render CLI 2.16.0+.
+compatibility: >-
+  Requires Render SDK 1.x. Local validation requires Render CLI 2.12.0+;
+  optional scaffolding and CLI deployment require Render CLI 2.16.0+.
+  Blueprints support "type: workflow" (no service-level plan).
 metadata:
   author: Render
-  version: "1.1.3"
+  version: "1.2.0"
   category: workflows
 ---
 
@@ -101,6 +110,8 @@ When safe and practical, run this verification yourself and stop the dev server 
 
 Creating or releasing a workflow changes the user's Render account. Only do it when deployment is part of the request and the tasks have been validated locally when local execution is supported.
 
+**Prefer a Blueprint** (`type: workflow` in `render.yaml`) when the repo already uses IaC or the workflow ships next to other Render services. Use `render workflows create` or the Dashboard for a standalone workflow with no Blueprint. MCP cannot create workflow services.
+
 Before deploying, authenticate and confirm the target workspace:
 
 ```bash
@@ -133,7 +144,53 @@ render workflows create \
 
 For a workflow in a subdirectory, add `--root-directory`. Environment variables can be supplied with repeatable `--env-file` and `--env-var` flags. Never expose secrets in commands or output.
 
-The Render Dashboard is also a supported creation path and is currently required for Docker-based workflow creation. Before recommending a Blueprint, check the current [Workflows limitations](https://render.com/docs/workflows#faq) and [Blueprint specification](https://render.com/docs/blueprint-spec); support is evolving.
+### Deploy with a Blueprint (preferred for IaC)
+
+Workflows are a Blueprint service type. Prefer `render.yaml` when the repo already has a Blueprint, when the workflow ships next to other Render services, or when the user wants infrastructure as code.
+
+Do **not** set `plan` on a workflow service. Task compute is configured in code (`plan` on the task), not on the service. MCP cannot create workflow services.
+
+Blueprint `runtime` is `python` or `node` only, which is narrower than `render workflows create`, whose `--runtime` also accepts `go`, `ruby`, and `elixir`. Create a workflow in one of those runtimes with the CLI or Dashboard, not a Blueprint. Note that `render blueprints validate` currently accepts `runtime: docker` on a workflow even though the published schema rejects it, so a passing validate is not proof that a runtime is supported.
+
+```yaml
+services:
+  - type: workflow
+    name: my-workflow
+    runtime: python
+    region: oregon
+    repo: https://github.com/render-examples/render-workflows-examples-python
+    branch: main
+    rootDir: hello-world
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: RENDER_API_KEY
+        sync: false
+```
+
+Keep `repo` on workflow services. Unlike `web` and other Git-based types, `render blueprints validate` reports `repo is required for git-based services` for a workflow even when the file is validated from inside that repository with an `origin` remote. Set `repo` explicitly so validation passes.
+
+TypeScript variant: `runtime: node`, `buildCommand: npm install && npm run build`, `startCommand: node dist/main.js`.
+
+Required Blueprint fields: `type`, `name`, `runtime`, `region`, `startCommand`, plus `buildCommand` and `repo` in practice. Optional: `branch`, `rootDir`, `buildFilter`, `autoDeployTrigger`, `envVars` (applied to every task run).
+
+The published JSON schema lists only `type`, `name`, `runtime`, `region`, and `startCommand` as required, but Render's validator also rejects a workflow that omits `buildCommand` (`buildCommand is required for non-docker workflows`) or `repo` (`repo is required for git-based services`). Always include both. Do not treat the schema's `required` array as the complete set.
+
+Caveats:
+
+- Preview environments skip workflow services. Other Blueprint resources still replicate.
+- Render rejects a Blueprint that would create a workflow with the same name as an existing Blueprint-managed workflow in the workspace.
+- The [Workflows intro FAQ](https://render.com/docs/workflows) may still say Blueprints cannot manage workflows. That is stale. Follow the [changelog](https://render.com/changelog/added-blueprint-support-for-render-workflows) and `https://render.com/schema/render.yaml.json`.
+
+Validate before applying:
+
+```bash
+render blueprints validate
+```
+
+Pair with **render-blueprints** for wiring and **render-deploy** for the apply/deeplink flow.
+
+The Render Dashboard (**New > Workflow**) and `render workflows create` remain valid for a standalone workflow with no Blueprint. Dashboard is currently required for Docker-based workflow creation; native Blueprint runtimes are `python` and `node` only.
 
 For later explicit releases, use:
 
@@ -212,6 +269,7 @@ Before setting a task's `plan`, estimating cost, or advising on capacity, consul
 
 ## Related Skills
 
-- `render-deploy`: deploy other Render service types
+- `render-blueprints`: `type: workflow` in `render.yaml`, previews, wiring
+- `render-deploy`: Blueprint apply flow for multi-service apps that include a workflow
 - `render-debug`: diagnose deployment and runtime failures
 - `render-monitor`: inspect service health and performance

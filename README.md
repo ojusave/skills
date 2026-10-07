@@ -66,6 +66,8 @@ render skills update   # update installed skills
 | [`render-background-workers`](skills/render-background-workers/SKILL.md) | Set up queue-based background workers and graceful shutdown |
 | [`render-cron-jobs`](skills/render-cron-jobs/SKILL.md) | Configure scheduled jobs and cron expressions |
 | [`render-workflows`](skills/render-workflows/SKILL.md) | Set up and develop Render Workflows |
+| [`render-sandboxes`](skills/render-sandboxes/SKILL.md) | Run code in isolated Render Sandboxes, with network allow-lists and snapshots |
+| [`render-sandbox-managed-agents`](skills/render-sandbox-managed-agents/SKILL.md) | Run Claude Managed Agents tool calls in Render Sandboxes |
 
 ### Build and runtime
 

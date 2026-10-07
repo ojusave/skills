@@ -1,6 +1,6 @@
 # Render Skills for AI Agents
 
-A catalog of 21 skills that teach AI coding tools how to deploy, operate, and debug apps on Render. Each skill is a self-contained `SKILL.md` plus references that any compatible agent can use.
+A catalog of 22 skills that teach AI coding tools how to deploy and manage apps on Render, including running code in Sandboxes. Each skill is a self-contained `SKILL.md` plus references that any compatible agent can use.
 
 Use this repo to:
 
@@ -42,7 +42,8 @@ render skills update   # update installed skills
 ### Prerequisites
 
 - A Render account with the [Render MCP server](skills/render-mcp/SKILL.md) configured, or the [Render CLI](skills/render-cli/SKILL.md) installed
-- A `RENDER_API_KEY` environment variable
+- Authentication for your chosen tool: Render login for an official plugin MCP connection or the CLI, or `RENDER_API_KEY` for CI
+- A workspace with Sandboxes access for the sandbox skill
 - A Git repository on GitHub, GitLab, or Bitbucket for any deploy-related skill
 
 ## Skills catalog
@@ -74,6 +75,7 @@ render skills update   # update installed skills
 | [`render-docker`](skills/render-docker/SKILL.md) | Build and deploy Docker-based services |
 | [`render-env-vars`](skills/render-env-vars/SKILL.md) | Manage env vars, secrets, and env groups |
 | [`render-disks`](skills/render-disks/SKILL.md) | Attach and manage persistent disks |
+| [`render-sandboxes`](skills/render-sandboxes/SKILL.md) | Run scripts and test dependencies in disposable Render Sandboxes |
 
 ### Networking and access
 
@@ -109,6 +111,7 @@ Once installed, ask your agent things like:
 - "Add a cron job that runs every night."
 - "Configure custom domains for this web service."
 - "Migrate my Heroku app to Render."
+- "Run this Python script in a Render Sandbox, show the output, then delete the sandbox."
 
 ## Auto-approval hooks (Claude Code)
 
@@ -153,7 +156,7 @@ skills/
 ├── .github/workflows/   # CI
 ├── hooks/               # Auto-approval hook config for Claude Code
 ├── scripts/             # Install and helper scripts
-├── skills/              # 21 skill directories
+├── skills/              # 22 skill directories
 ├── README.md
 └── LICENSE
 ```

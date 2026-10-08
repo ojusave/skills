@@ -80,9 +80,4 @@ image:
 
 ## Auto-deploy and prebuilt images
 
-Services that **only pull** a prebuilt image (**`runtime: image`**) **do not** auto-deploy when a mutable tag like **`latest`** is updated upstream. After publishing a new image you must:
-
-- Trigger a **manual redeploy** in the Dashboard, or
-- Call a **deploy hook** / API flow your team uses for CD.
-
-Combine **immutable tags or digests** with your release pipeline so each deploy points at an explicit artifact.
+Follow [deployments.md](deployments.md) for current trigger and mutable-tag behavior. Combine **immutable tags or digests** with your release pipeline so each deploy points at an explicit artifact.

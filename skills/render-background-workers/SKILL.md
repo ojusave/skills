@@ -29,6 +29,10 @@ This skill explains **worker** services on Render: processes that **consume jobs
 
 Per-framework setup and signal-handling detail: `references/queue-framework-setup.md`, `references/graceful-shutdown.md`.
 
+Before deploying, restarting, or changing shutdown behavior, read `references/deployments.md`.
+Before configuring or troubleshooting a worker's outbound private-network connection, read `references/private-networking.md`.
+When choosing between a worker, cron job, and Workflow, read `references/service-types.md`.
+
 ## How Workers Work
 
 - **Long-running services** with **no inbound (HTTP) traffic**. Render does not expose a public URL or internal hostname for workers the way it does for web or private services—**workers cannot receive private network traffic directed at them**.
@@ -65,9 +69,8 @@ See `references/queue-framework-setup.md` for minimal app + YAML examples.
 
 ## Graceful Shutdown
 
-- Before stopping an instance, Render sends **`SIGTERM`**, then waits up to **`maxShutdownDelaySeconds`** (**1–300**, **default 30**) before **`SIGKILL`**.
 - Workers should: **(1)** stop accepting new jobs, **(2)** finish the current job or **checkpoint** progress, **(3)** close connections, **(4)** exit **0**.
-- Set **`maxShutdownDelaySeconds`** to at least your **longest safe job duration** (see Dashboard or Blueprint).
+- Follow `references/deployments.md` for Render's current drain, signal, and shutdown-delay behavior.
 
 Language- and framework-specific handlers: `references/graceful-shutdown.md`.
 
@@ -107,6 +110,9 @@ Optional: **`maxShutdownDelaySeconds`** on the worker service for longer drainin
 |--------|------|
 | Celery, Sidekiq, BullMQ, Asynq, Oban setup + YAML | `references/queue-framework-setup.md` |
 | SIGTERM, `maxShutdownDelaySeconds`, per-language patterns | `references/graceful-shutdown.md` |
+| Deploy lifecycle, shutdown, restart, and verification | `references/deployments.md` |
+| Private-network scope, internal addresses, and troubleshooting | `references/private-networking.md` |
+| Service-type selection and execution models | `references/service-types.md` |
 
 ## Related Skills
 
@@ -114,3 +120,16 @@ Optional: **`maxShutdownDelaySeconds`** on the worker service for longer drainin
 - **render-blueprints** — Full `render.yaml` schema, `fromService`, projects
 - **render-networking** — Private URLs, what can call what
 - **render-scaling** — Worker plans, instance counts, limits
+
+<!-- shared:documentation-retrieval -->
+## Current documentation retrieval
+
+Whenever this skill directs you to consult current Render documentation:
+
+1. Retrieve the linked Markdown document directly with an available URL-fetching tool or HTTP client, such as `curl`. Do not substitute web-search summaries for the document.
+2. Confirm that retrieval succeeded and returned the expected document, then read its contents. Saving a file or printing its path is not sufficient.
+3. If the request fails or your tool cannot read the Markdown response, open and read the linked HTML version instead.
+4. If neither version can be retrieved, disclose that the current reference is unavailable and follow any topic-specific fallback in the skill. Use bundled guidance only for stable constraints, and do not guess at changeable platform details.
+
+When a task requires multiple references, apply this workflow to each one and distinguish the documents you verified from those that remain unavailable.
+<!-- /shared:documentation-retrieval -->

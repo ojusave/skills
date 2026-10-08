@@ -1,6 +1,6 @@
 # Private network communication patterns
 
-Architecture examples and implementation notes for Render’s private network. Pair with the main `SKILL.md` for limits (region, workspace, free tier, ports).
+Architecture examples and implementation notes for Render’s private network. Read [private-networking.md](private-networking.md) first for current platform behavior and limits.
 
 ## Gateway pattern
 
@@ -43,10 +43,10 @@ In `render.yaml`, link services for private access using **`fromService`** on th
 
 Ensure the producer service type supports private networking and that region/workspace match the consumer.
 
-## Discovery hostname for custom load balancing
+## Per-instance discovery
 
-When a service scales to multiple instances:
+Use per-instance discovery only when the application must implement custom instance selection, retries, health aggregation, or per-instance metrics. Prefer the normal internal hostname for ordinary service-to-service calls. Follow [private-networking.md](private-networking.md) for the current discovery hostname and resolver behavior.
 
-- The **`[hostname]-discovery`** name resolves to **all** instance IPs.
-- Combine with **`RENDER_DISCOVERY_SERVICE`** where provided to drive custom selection, retries, or metrics per instance.
-- Useful when round-robin or sticky behavior must be implemented in application code rather than relying on a single internal A-record.
+## Crossing private-network boundaries
+
+When resources intentionally span regions, workspaces, or isolated project environments, either colocate them or design an explicit supported integration path such as an authenticated public endpoint or data replication. Do not expose an otherwise private service merely as a troubleshooting shortcut.

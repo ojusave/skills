@@ -30,6 +30,9 @@ This skill covers **Cron Job** services on Render: how schedules run, what the p
 
 Expression cheat sheets, framework `startCommand` examples, and Heroku Scheduler migration mapping live under `references/`.
 
+Before configuring or troubleshooting a cron job's outbound private-network connection, read `references/private-networking.md`.
+When choosing between a cron job, worker, and Workflow, read `references/service-types.md`.
+
 ## Configuration
 
 - **Schedule**: a **cron expression evaluated in UTC**, not the team’s local timezone. All times in the Dashboard and Blueprints are UTC.
@@ -98,6 +101,8 @@ services:
 
 | Topic | File |
 |--------|------|
+| Private-network scope, internal addresses, and troubleshooting | `references/private-networking.md` |
+| Service-type selection and execution models | `references/service-types.md` |
 | Expression examples, framework commands, errors, env vars | `references/cron-patterns.md` |
 | Heroku Scheduler → Render mapping, blueprint example | `references/migration-from-scheduler.md` |
 
@@ -107,3 +112,16 @@ services:
 - **render-blueprints** — Full `render.yaml` schema, previews, common mistakes
 - **render-background-workers** — Long-lived processes, queues, no 12h cap
 - **render-workflows** — Orchestrated and parallel jobs, often triggered on a schedule from cron
+
+<!-- shared:documentation-retrieval -->
+## Current documentation retrieval
+
+Whenever this skill directs you to consult current Render documentation:
+
+1. Retrieve the linked Markdown document directly with an available URL-fetching tool or HTTP client, such as `curl`. Do not substitute web-search summaries for the document.
+2. Confirm that retrieval succeeded and returned the expected document, then read its contents. Saving a file or printing its path is not sufficient.
+3. If the request fails or your tool cannot read the Markdown response, open and read the linked HTML version instead.
+4. If neither version can be retrieved, disclose that the current reference is unavailable and follow any topic-specific fallback in the skill. Use bundled guidance only for stable constraints, and do not guess at changeable platform details.
+
+When a task requires multiple references, apply this workflow to each one and distinguish the documents you verified from those that remain unavailable.
+<!-- /shared:documentation-retrieval -->

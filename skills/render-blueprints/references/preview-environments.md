@@ -43,13 +43,15 @@ The only supported service-level generation values are `manual` and `automatic`.
 
 ---
 
-## Preview instance types
+## Preview compute plans
 
-- For web services, private services, background workers, and cron jobs, set **`previews.plan`**. Despite sharing an object with the service-preview generation field, this field controls the instance type used in preview environments.
+- For web services, private services, background workers, and cron jobs, set **`previews.plan`**. Despite sharing an object with the service-preview generation field, this field controls the compute plan used in preview environments.
 - Set **`previews.numInstances`** to control the service's instance count in preview environments.
 - For Key Value and Postgres instances, set **`previewPlan`**.
-- For Postgres, `plan` and `previewPlan` must both use flexible instance types or both use legacy instance types.
-- If no preview instance type is specified, Render uses the base resource's instance type.
+- For Postgres, `plan` and `previewPlan` must both use flexible compute plans or both use legacy compute plans.
+- If no preview compute plan is specified, Render uses the base resource's compute plan.
+
+Use `compute-plans.md` for current Plan IDs and availability rather than copying plan catalogs into this preview-specific reference.
 
 ```yaml
 services:

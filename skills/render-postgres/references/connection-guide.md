@@ -1,5 +1,7 @@
 # Database connection guide (Render Managed Postgres)
 
+Read [private-networking.md](private-networking.md) first when configuring or troubleshooting an internal connection.
+
 ## URL formats
 
 - **Internal** (same region and workspace on Render; private network):

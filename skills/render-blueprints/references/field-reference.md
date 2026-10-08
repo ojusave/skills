@@ -153,7 +153,7 @@ Each entry is typically keyed by `key` plus **one** of:
 | `value` | Inline literal. |
 | `generateValue` | Render generates a random secret. |
 | `sync` | `false` = do not sync from Blueprint after initial setup (secrets); see limitations in preview/group docs. |
-| `fromDatabase` | Pull DB host, port, user, password, database, or `connectionString`. |
+| `fromDatabase` | Pull DB host, port, user, password, database, `connectionString`, or `connectionPoolString`. |
 | `fromService` | Pull host/port/connection info from another service. |
 | `fromGroup` | Import vars from an `envVarGroup` by name. |
 
@@ -175,13 +175,13 @@ Each entry is typically keyed by `key` plus **one** of:
 
 ## disk
 
-Attached disk object on a service:
+Before configuring an attached service disk, read [persistent-disks.md](persistent-disks.md) for its architectural constraints and confirm the current schema in the Blueprint specification.
 
 | Field | Notes |
-|-------|--------|
+|-------|-------|
 | `name` | Disk identifier. |
-| `mountPath` | Mount path in the instance filesystem. |
-| `sizeGB` | Size in GB. |
+| `mountPath` | Absolute mount path in the instance filesystem. |
+| `sizeGB` | Provisioned disk capacity in GB. |
 
 ---
 

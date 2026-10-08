@@ -62,7 +62,7 @@ Symptoms, causes, and fixes for frequent `render.yaml` errors.
 
 ## 6. Using the wrong preview-plan field
 
-**Mistake:** Setting `previewPlan` on a compute service, setting `previews.plan` on Key Value or Postgres, or mixing flexible and legacy Postgres instance types between `plan` and `previewPlan`.
+**Mistake:** Setting `previewPlan` on a compute service, setting `previews.plan` on Key Value or Postgres, or mixing flexible and legacy Postgres compute plans between `plan` and `previewPlan`.
 
 **Effect:** Preview deploy failures or plan validation errors.
 

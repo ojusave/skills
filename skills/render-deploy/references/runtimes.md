@@ -55,6 +55,14 @@ buildCommand: npm ci && npm run build
 startCommand: npm start
 ```
 
+For NextAuth.js v4, `NEXTAUTH_URL` must be the application's canonical public URL. Render injects the service's `onrender.com` hostname as `RENDER_EXTERNAL_HOSTNAME`, but Blueprint environment-variable values do not interpolate other environment variables. A reusable service can derive the default at startup while allowing an explicitly configured custom-domain URL to take precedence:
+
+```yaml
+startCommand: NEXTAUTH_URL="${NEXTAUTH_URL:-https://$RENDER_EXTERNAL_HOSTNAME}" npm start
+```
+
+Set `NEXTAUTH_URL` explicitly when a custom domain should be canonical. Do not hardcode a guessed `onrender.com` hostname in a reusable Blueprint.
+
 ---
 
 ### Python (`runtime: python`)
@@ -342,7 +350,7 @@ type: web
 name: private-app
 runtime: image
 image:
-  url: myregistry.com/myapp:latest
+  url: registry.example.com/myapp:latest  # Replace with your registry host
   creds:
     fromRegistryCreds:
       name: my-registry-credential

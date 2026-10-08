@@ -1,27 +1,16 @@
 # Data Migration Guide
 
-Detailed steps for migrating Postgres and Key Value data from Heroku to Render. The Render CLI's [`render psql`](https://render.com/docs/cli) handles the Postgres restore without requiring the Render database connection string.
+Detailed steps for migrating Postgres and Key Value data from Heroku to Render. Small Postgres migrations can restore through the Render CLI without a Render connection string; larger migrations use `pg_restore` with the database's external connection string.
 
 ## 5a. Pre-migration checks
 
 Before generating any migration commands, verify readiness:
 
-1. **Render Postgres is provisioned** — call `list_postgres_instances()` to find the Postgres ID and confirm the database exists. Note the ID for `render psql` in Step 5c.
-2. **Render Key Value is provisioned** (if Key Value data needs migrating) — call `list_key_value()` to find the Key Value ID and confirm the instance exists. Note the ID for the Dashboard deeplink in Step 5d.
+1. **Render Postgres is provisioned** — use a Postgres ID the user already supplied, or call `list_postgres_instances()` when live discovery is requested and needed. Note the ID for `render psql` or the Dashboard link in Step 5c.
+2. **Render Key Value is provisioned** (if Key Value data needs migrating) — use a Key Value ID the user already supplied, or call `list_key_value()` when live discovery is requested and needed. Note the ID for the Dashboard deeplink in Step 5d.
 3. **Check source database size** — use Heroku MCP `pg_info` (look for `Data Size`), or ask the user to run `heroku pg:info -a <app>` and paste the output.
 4. **Compare disk sizes** — warn if Heroku `Data Size` exceeds the `diskSizeGB` configured on the Render side. If it does, the user needs to increase `diskSizeGB` before restoring.
-5. **Render CLI** — confirm the Render CLI is installed and authenticated (required for `render psql` restore):
-
-   ```bash
-   render --version
-   render whoami
-   ```
-
-   If not installed, offer to install it:
-   - macOS: `brew install render`
-   - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/render-oss/cli/main/bin/install.sh | sh`
-
-   If not authenticated, run `render login` to authorize via the Dashboard.
+5. **Render CLI** — required only for the under-2-GB `render psql` route. Follow [render-access.md](render-access.md) to install or authenticate it and verify the intended workspace. The traditional `pg_restore` route instead requires the Render external connection string and PostgreSQL client tools.
 
 6. **`pg_dump` and `pg_restore`** — check that the user has PostgreSQL client tools installed locally:
 
@@ -40,7 +29,7 @@ Before generating any migration commands, verify readiness:
 
 ## 5b. Gather connection strings
 
-Collect the connection strings needed for the migration. The **Render Postgres** connection string is **not needed** — the Render CLI's `render psql` command connects directly using the Postgres ID from Step 5a. Only the Heroku source URLs and the Render Key Value URL (if applicable) are needed.
+Collect the connection strings needed for the chosen route. The under-2-GB `render psql` route connects by Postgres ID and does not need a Render Postgres connection string. The traditional 2–50-GB route requires the Render external connection string. A Render Key Value URL is needed only when Key Value data is being migrated.
 
 **Heroku Postgres:**
 

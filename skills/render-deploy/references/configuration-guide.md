@@ -4,138 +4,7 @@ Common configuration patterns, best practices, and troubleshooting for Render de
 
 ## Environment Variables
 
-### Required vs Optional Variables
-
-**Always declare ALL environment variables in render.yaml**, even if values are provided by user later.
-
-**Three categories:**
-
-1. **Configuration values** (hardcoded):
-```yaml
-envVars:
-  - key: NODE_ENV
-    value: production
-  - key: LOG_LEVEL
-    value: info
-  - key: API_URL
-    value: https://api.example.com
-```
-
-2. **Secrets** (user provides):
-```yaml
-envVars:
-  - key: JWT_SECRET
-    sync: false
-  - key: STRIPE_SECRET_KEY
-    sync: false
-  - key: API_KEY
-    sync: false
-```
-
-3. **Auto-generated** (Render provides):
-```yaml
-envVars:
-  - key: SESSION_SECRET
-    generateValue: true
-  - key: ENCRYPTION_KEY
-    generateValue: true
-```
-
-### Database Connection Patterns
-
-**PostgreSQL:**
-```yaml
-envVars:
-  - key: DATABASE_URL
-    fromDatabase:
-      name: postgres
-      property: connectionString
-```
-
-**Key Value:**
-```yaml
-envVars:
-  - key: REDIS_URL
-    fromService:
-      name: redis
-      type: keyvalue
-      property: connectionString
-```
-
-**Multiple database and cache connections:**
-```yaml
-envVars:
-  - key: PRIMARY_DB_URL
-    fromDatabase:
-      name: postgres-primary
-      property: connectionString
-  - key: ANALYTICS_DB_URL
-    fromDatabase:
-      name: postgres-analytics
-      property: connectionString
-  - key: CACHE_URL
-    fromService:
-      name: redis
-      type: keyvalue
-      property: connectionString
-```
-
-### Cross-Service References
-
-Reference other services in your account:
-
-```yaml
-services:
-  - type: web
-    name: frontend
-    runtime: node
-    envVars:
-      - key: API_URL
-        fromService:
-          name: backend-api
-          type: web
-          property: host  # or hostport, port
-
-  - type: web
-    name: backend-api
-    runtime: node
-```
-
-**Available properties:**
-- `host`: Service hostname
-- `port`: Service port
-- `hostport`: Combined `host:port`
-
-### Environment Variable Groups
-
-Share common configuration across services:
-
-```yaml
-envVarGroups:
-  - name: common-config
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: LOG_LEVEL
-        value: info
-      - key: TZ
-        value: UTC
-
-services:
-  - type: web
-    name: web-app
-    runtime: node
-    envVars:
-      - fromGroup: common-config
-      - key: PORT
-        value: 10000
-
-  - type: worker
-    name: worker
-    runtime: node
-    envVars:
-      - fromGroup: common-config
-```
+Read [environment-variables.md](environment-variables.md) before inspecting or changing configuration. It defines the current documentation, source-of-truth, Blueprint wiring, secret handling, environment-group precedence, and mutation workflow.
 
 ---
 
@@ -179,11 +48,21 @@ if __name__ == '__main__':
 
 **Python / Django:**
 
-In `settings.py`:
+Render automatically provides the web service's `onrender.com` hostname in `RENDER_EXTERNAL_HOSTNAME`. Add it in `settings.py`, along with any custom domains the application serves:
 ```python
-# Django runs on port specified by environment
-ALLOWED_HOSTS = ['*']
+import os
+
+ALLOWED_HOSTS = []
+
+render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+
+# Add known custom domains explicitly when applicable.
+# ALLOWED_HOSTS.append('www.example.com')
 ```
+
+Do not use `ALLOWED_HOSTS = ['*']` in production, and do not hardcode a guessed `onrender.com` hostname in a reusable Blueprint.
 
 Start command in render.yaml:
 ```yaml
@@ -326,6 +205,8 @@ Do not confuse these command limits with idle spin-down: a Free web service spin
 
 **Use internal URLs for better performance:**
 
+Read [private-networking.md](private-networking.md) for current private-network scope and connection requirements.
+
 Use `fromDatabase` to populate an environment variable with the database's internal connection string.
 
 ```yaml
@@ -380,22 +261,27 @@ DATABASES = {
 
 ### Database Migrations
 
-**Run migrations during build:**
+For a paid web service, private service, or background worker, run migrations in `preDeployCommand` so they execute after the build and before the new version is deployed:
 
 **Django:**
 ```yaml
-buildCommand: pip install -r requirements.txt && python manage.py migrate
+buildCommand: pip install -r requirements.txt
+preDeployCommand: python manage.py migrate
 ```
 
 **Rails:**
 ```yaml
-buildCommand: bundle install && bundle exec rails db:migrate
+buildCommand: bundle install
+preDeployCommand: bundle exec rails db:migrate
 ```
 
 **Node.js / Prisma:**
 ```yaml
-buildCommand: npm ci && npx prisma migrate deploy
+buildCommand: npm ci
+preDeployCommand: npx prisma migrate deploy
 ```
+
+Free services and service types that do not support a pre-deploy command must use another migration workflow. For a Free web service, include an idempotent migration step in `buildCommand`, for example `pip install -r requirements.txt && python manage.py migrate`.
 
 ---
 
@@ -495,16 +381,7 @@ services:
 
 **Symptom:** Service crashes with "undefined variable" errors
 
-**Solution:** Add all required env vars to render.yaml:
-```yaml
-envVars:
-  - key: DATABASE_URL
-    fromDatabase:
-      name: postgres
-      property: connectionString
-  - key: JWT_SECRET
-    sync: false  # User fills in Dashboard
-```
+**Solution:** Follow [environment-variables.md](environment-variables.md), add the missing key through the intended source of truth, and deploy the applicable configuration change.
 
 ### Issue 2: Port Binding Errors
 
@@ -560,9 +437,9 @@ routes:
 ## Best Practices Checklist
 
 **Environment Variables:**
-- [ ] All env vars declared in render.yaml
-- [ ] Secrets marked with `sync: false`
-- [ ] Database URLs use `fromDatabase` references
+- [ ] Required keys configured through the intended source of truth
+- [ ] Secrets use an appropriate supported mechanism and are not exposed
+- [ ] Resource connection values use current Blueprint references where applicable
 
 **Port Binding:**
 - [ ] App binds to `process.env.PORT`
@@ -586,7 +463,7 @@ routes:
 - [ ] SSL enabled if needed
 
 **Plans:**
-- [ ] Using `plan: free` for non-static web services, Key Value, and Postgres; static sites have no plan; `plan: starter` for other service types that support a plan
+- [ ] Selected a current Plan ID appropriate to each resource after consulting [compute-plans.md](compute-plans.md); static sites have no compute plan
 - [ ] Documented upgrade path for users
 
 **Git Repository:**
@@ -598,7 +475,7 @@ routes:
 
 ## Additional Resources
 
-- Blueprint Specification: [blueprint-spec.md](blueprint-spec.md)
+- Current Blueprint authoring and validation workflow: [blueprints.md](blueprints.md)
 - Service Types: [service-types.md](service-types.md)
 - Runtimes: [runtimes.md](runtimes.md)
 - Official Render Docs: https://render.com/docs

@@ -26,18 +26,13 @@ Comprehensive guide to understanding and acting on Render service metrics.
 
 **What it measures:** Percentage of allocated CPU being used.
 
-**Healthy ranges by plan:**
-| Plan | Typical Healthy | Warning | Critical |
-|------|-----------------|---------|----------|
-| Free/Starter | <60% | 60-80% | >80% |
-| Standard | <70% | 70-85% | >85% |
-| Pro+ | <75% | 75-90% | >90% |
+Interpret CPU utilization relative to the service's selected compute plan and workload. Use [compute-plans.md](compute-plans.md) when current CPU specifications matter instead of inferring them from legacy plan names.
 
 **Actions for high CPU:**
 1. Profile code for inefficient operations
 2. Add caching for repeated computations
 3. Optimize database queries
-4. Upgrade to higher plan
+4. Upgrade to a larger compute plan
 5. Enable autoscaling
 
 ### cpu_limit
@@ -59,13 +54,7 @@ Comprehensive guide to understanding and acting on Render service metrics.
 
 **What it measures:** Memory being used by the service in bytes.
 
-**Healthy ranges:**
-| Plan | Memory Limit | Warning Threshold | Critical Threshold |
-|------|-------------|-------------------|-------------------|
-| Free | 512 MB | 400 MB (78%) | 460 MB (90%) |
-| Starter | 512 MB | 400 MB (78%) | 460 MB (90%) |
-| Standard | 2 GB | 1.6 GB (80%) | 1.8 GB (90%) |
-| Pro | 4 GB | 3.2 GB (80%) | 3.6 GB (90%) |
+Interpret memory relative to the resource's reported limit rather than mapping legacy plan names to memorized byte values. Use [compute-plans.md](compute-plans.md) when current memory specifications matter.
 
 **Actions for high memory:**
 1. Profile for memory leaks
@@ -161,20 +150,14 @@ Compare `instance_count` trends with `cpu_usage` and `http_request_count`:
 
 **What it measures:** Number of active database connections.
 
-**Connection limits by plan:**
-| Plan | Max Connections | Warning | Critical |
-|------|----------------|---------|----------|
-| Free | 100 | 75 | 90 |
-| Basic | 100 | 75 | 90 |
-| Standard | 200-500 | 160-400 | 180-450 |
-| Pro | 500+ | 400+ | 450+ |
+Connection limits vary by Postgres compute plan. Fetch the current limit through [compute-plans.md](compute-plans.md), then compare active connections with that limit.
 
 **Actions for high connections:**
 1. Implement connection pooling (PgBouncer)
 2. Close idle connections
 3. Reduce connection timeouts
 4. Fix connection leaks in code
-5. Upgrade database plan
+5. Upgrade the database compute plan
 
 ### Database CPU/Memory
 

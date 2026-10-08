@@ -4,11 +4,7 @@ Render stops worker instances during **deploys**, **manual restarts**, and **sca
 
 ## Platform behavior
 
-1. Render sends **`SIGTERM`** to your process.
-2. The platform waits up to **`maxShutdownDelaySeconds`** (**1–300**, **default 30**).
-3. If the process is still running, Render sends **`SIGKILL`** (not catchable).
-
-Configure **`maxShutdownDelaySeconds`** in the **Dashboard** (service settings) or in **`render.yaml`** on the worker service. Set it to cover your **longest job** you are willing to let complete during shutdown (plus buffer for flushing metrics, closing DB pools, etc.).
+Follow [deployments.md](deployments.md) for Render's current drain, signal, and shutdown-delay behavior. Set the available shutdown delay to cover the longest job you are willing to let complete, plus time for cleanup.
 
 ## General pattern
 

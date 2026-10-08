@@ -2,7 +2,7 @@
 
 This example shows a complete `render.yaml` for migrating a typical Heroku app with a web dyno, worker dyno, Heroku Scheduler (clock), Postgres, and Key Value. It uses the `projects`/`environments` pattern to group all resources in a single Render project.
 
-References: [Blueprint docs](https://render.com/docs/blueprint-spec#projects-and-environments) | [Blueprint YAML JSON schema](https://render.com/schema/render.yaml.json)
+For current Blueprint syntax and validation, first read [blueprints.md](blueprints.md). This document adds migration-specific structure and rules.
 
 ## Full Example
 

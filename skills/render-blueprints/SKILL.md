@@ -23,6 +23,16 @@ metadata:
 
 Blueprints define Render infrastructure as YAML (commonly `render.yaml` at the repo root). This skill focuses on **authoring**, **wiring**, **projects/environments**, **previews**, **validation**, and **immutable fields**. Heavy detail lives under `references/`.
 
+Before creating or modifying a Blueprint, read `references/blueprints.md` for the current specification-fetch, validation, repository-sync, and safety workflow.
+
+For current compute-plan terminology, Plan IDs, and availability, use `references/compute-plans.md` instead of relying on plan catalogs embedded in examples.
+
+Before adding or changing a service-attached disk, read `references/persistent-disks.md` for current architectural constraints and configuration workflow.
+
+Before wiring private-network addresses, ports, or discovery hostnames, read `references/private-networking.md`.
+
+Before choosing a service type or translating its Dashboard name to Blueprint structure, read `references/service-types.md`.
+
 ## When to Use
 
 Apply this skill when the user:
@@ -48,12 +58,7 @@ For end-to-end deploy flows and MCP/CLI operations, see **render-deploy**. For e
 | `projects` | Optional grouping; contains `environments` and service lists |
 | `previews` | Defaults for PR preview environments |
 
-A Blueprint may also use patterns like **ungrouped** resources vs **environment-scoped** lists, depending on whether you adopt the projects model. Avoid duplicating the same logical resource in multiple places (see `references/common-mistakes.md`).
-
-### Schema and IDE validation
-
-- **JSON Schema URL:** `https://render.com/schema/render.yaml.json`
-- Configure your editor to associate `render.yaml` with that schema for completions and diagnostics.
+A Blueprint may also use patterns like **ungrouped** resources vs **environment-scoped** lists, depending on whether you adopt the projects model. See `references/common-mistakes.md` for duplication and naming pitfalls.
 
 ### Minimal example: web + PostgreSQL
 
@@ -98,13 +103,15 @@ Common `runtime` values: **`node`**, **`python`**, **`go`**, **`ruby`**, **`rust
 
 ## Cross-Service Wiring
 
+Before configuring variables, secrets, secret files, or environment groups, read `references/environment-variables.md`.
+
 Service env vars under `envVars` can pull values from other resources instead of hardcoding secrets. Environment-group variables cannot reference services, databases, or other environment groups.
 
 ### `fromDatabase`
 
 Reference a database in `databases:` by `name`. Properties include:
 
-- `connectionString`, `host`, `port`, `user`, `password`, `database`
+- `connectionString`, `connectionPoolString`, `host`, `port`, `user`, `password`, `database`
 
 ### `fromService`
 
@@ -117,12 +124,6 @@ Which properties are valid depends on target service type (e.g. Key Value vs `ps
 ### `fromGroup`
 
 Attach shared vars from `envVarGroups` (by group `name`).
-
-### Other env var keys
-
-- **`value`**: Literal string.
-- **`generateValue`**: Let Render generate a random secret (password/API key).
-- **`sync`**: Set `sync: false` for secrets that should not sync from repo on every update (see edge cases in wiring reference).
 
 Full patterns and combinations: `references/wiring-patterns.md`.
 
@@ -194,22 +195,20 @@ For single-service apps, flat top-level `services`/`databases` is fine. Reach fo
 
 ## Preview Environments
 
+When a preview request is underspecified, first establish the desired generation mode, retention period, preview compute plans, and whether the user expects to exclude any resources.
+
 Top-level `previews` controls Blueprint preview environments:
 
 - **`previews.generation`**: `off` (default), `manual`, or `automatic`
 - **`previews.expireAfterDays`**: Auto-delete preview stacks after N days
 
-Do not confuse preview environments with service previews. A service-level `previews.generation` setting controls that service's independent pull request previews and does **not** override preview-environment generation; it accepts only `manual` or `automatic`, and omission disables service previews. Within the same service-level object, `previews.plan` and `previews.numInstances` size the service in preview environments. Key Value and Postgres use `previewPlan` instead. Limitations: autoscaling behavior, `sync: false` vars, and flexible database instance constraints—see `references/preview-environments.md`.
+Do not confuse preview environments with service previews:
 
-## Validation
+- A top-level `previews.generation: automatic` creates the Blueprint's preview environment, including the resources declared by that Blueprint.
+- A service-level `previews.generation` controls that service's independent service previews. It does **not** override the Blueprint preview environment or exclude that service from it. It accepts only `manual` or `automatic`; omit it to disable independent service previews.
+- Use `previews.plan` and `previews.numInstances` on compute services to size their preview-environment instances. Key Value and Postgres use `previewPlan` instead.
 
-```bash
-render blueprints validate
-```
-
-Requires **Render CLI v2.7.0+**. Run from the repo root (or pass the appropriate path options your CLI version supports). Fix schema and semantic errors before merging Blueprint changes.
-
-Official schema: `https://render.com/schema/render.yaml.json`
+If a user needs a worker or another resource omitted entirely from Blueprint preview environments, explain that service-level preview generation is not an exclusion mechanism; the Blueprint or application architecture must account for that requirement. Other limitations include autoscaling behavior, `sync: false` variables, and database plan compatibility—see `references/preview-environments.md`.
 
 ## Immutable Fields
 
@@ -252,8 +251,14 @@ Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `aut
 
 | Document | Contents |
 |----------|----------|
+| `references/blueprints.md` | Current Blueprint specification, schema, validation, repository-sync, and safety workflow |
+| `references/compute-plans.md` | Current compute-plan terminology, Plan ID discovery, availability, and change behavior |
+| `references/environment-variables.md` | Current environment-variable documentation, secrets, groups, platform variables, and mutation safety |
+| `references/persistent-disks.md` | Service-attached disk constraints, current documentation, sizing, snapshots, and Blueprint workflow |
+| `references/private-networking.md` | Private-network scope, addresses, Blueprint references, discovery, ports, and isolation |
+| `references/service-types.md` | Service-type selection, execution models, and Blueprint naming |
 | `references/field-reference.md` | YAML fields by service type, database, groups, projects, previews, scaling, disk, static, Key Value |
-| `references/wiring-patterns.md` | `fromDatabase` / `fromService` / `fromGroup` examples, `sync: false`, `generateValue`, combinations |
+| `references/wiring-patterns.md` | `fromDatabase` / `fromService` / `fromGroup` examples and combined wiring patterns |
 | `references/common-mistakes.md` | Branch + previews, `buildFilter`, replicas, duplicates, preview plans, wiring mistakes |
 | `references/preview-environments.md` | `previews.generation`, expiry, `previews.plan`, `previewPlan`, disks, PR workflow |
 
@@ -262,3 +267,16 @@ Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `aut
 - **render-deploy** — Deploy flows, Blueprint vs direct create, MCP/deeplinks
 - **render-env-vars** — Env var strategy, secrets, Dashboard vs Blueprint
 - **render-docker** — Dockerfile-backed services and image runtime nuances
+
+<!-- shared:documentation-retrieval -->
+## Current documentation retrieval
+
+Whenever this skill directs you to consult current Render documentation:
+
+1. Retrieve the linked Markdown document directly with an available URL-fetching tool or HTTP client, such as `curl`. Do not substitute web-search summaries for the document.
+2. Confirm that retrieval succeeded and returned the expected document, then read its contents. Saving a file or printing its path is not sufficient.
+3. If the request fails or your tool cannot read the Markdown response, open and read the linked HTML version instead.
+4. If neither version can be retrieved, disclose that the current reference is unavailable and follow any topic-specific fallback in the skill. Use bundled guidance only for stable constraints, and do not guess at changeable platform details.
+
+When a task requires multiple references, apply this workflow to each one and distinguish the documents you verified from those that remain unavailable.
+<!-- /shared:documentation-retrieval -->

@@ -1,6 +1,6 @@
 # Render Skills for AI Agents
 
-A catalog of 21 skills that teach AI coding tools how to deploy, operate, and debug apps on Render. Each skill is a self-contained `SKILL.md` plus references that any compatible agent can use.
+A catalog of 22 skills that teach AI coding tools how to deploy, operate, and debug apps on Render. Each skill is a self-contained `SKILL.md` plus references that any compatible agent can use.
 
 Use this repo to:
 
@@ -66,6 +66,7 @@ render skills update   # update installed skills
 | [`render-background-workers`](skills/render-background-workers/SKILL.md) | Set up queue-based background workers and graceful shutdown |
 | [`render-cron-jobs`](skills/render-cron-jobs/SKILL.md) | Configure scheduled jobs and cron expressions |
 | [`render-workflows`](skills/render-workflows/SKILL.md) | Set up and develop Render Workflows |
+| [`render-sandboxes`](skills/render-sandboxes/SKILL.md) | Run code in isolated, ephemeral environments with the CLI or SDK |
 
 ### Build and runtime
 
@@ -153,7 +154,7 @@ skills/
 ├── .github/workflows/   # CI
 ├── hooks/               # Auto-approval hook config for Claude Code
 ├── scripts/             # Install and helper scripts
-├── skills/              # 21 skill directories
+├── skills/              # 22 skill directories
 ├── README.md
 └── LICENSE
 ```

@@ -16,7 +16,7 @@ compatibility: >-
   enabled for Sandboxes. Check installed help and SDK types before use.
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.0.1"
   category: sandboxes
 ---
 
@@ -43,7 +43,7 @@ python -m pip show render
 npm ls @renderinc/sdk
 ```
 
-Read the installed SDK source for signatures. Installed releases and repository main can use different schemas. In particular, the SDK comments and CLI help disagree on the default lifetime; set an explicit lifetime and read [cli.md](references/cli.md) before relying on a default.
+Read the installed SDK source for signatures. Installed releases and repository main can use different schemas. Live testing found SDK 1.2.0's `allowedDomains` allow-list rejected by the current API; follow the verified public API path in [network.md](references/network.md) when no installed client exposes `rules`. In particular, the SDK comments and CLI help disagree on the default lifetime; set an explicit lifetime and read [cli.md](references/cli.md) before relying on a default.
 
 ## Run the lifecycle
 
@@ -51,13 +51,13 @@ Read the installed SDK source for signatures. Installed releases and repository 
 2. Wait until that ID is `running`. Use bounded polling; stop on `errored` or `terminated`. A successful create response is not readiness.
 3. Copy the inputs and execute the command. Inspect the exit event/code and verify the requested result. Download wanted outputs and logs before cleanup.
 4. Snapshot only when state needs to outlive the sandbox. Wait for `available` before depending on the snapshot; follow its restore plan constraint.
-5. Terminate when finished, including failure paths, and verify cleanup. Termination loses the filesystem. The SDK termination operation is idempotent for an already-terminated sandbox; an invalid ID still fails.
+5. Terminate when finished, including failure paths, and verify cleanup using the [failure recovery procedure](references/lifecycle.md#recover-from-failures). Termination loses the filesystem. The SDK termination operation is idempotent for an already-terminated sandbox; an invalid ID still fails.
 
 For an always-on service, scheduled job, or queue consumer, use the decision in [lifecycle.md](references/lifecycle.md) before creating anything.
 
 ## Choose networking before running code
 
-For generated or untrusted code, set `deny-all` or an explicit `allow-list` containing the required destinations. Do not depend on the permissive default. The CLI and Python high-level client do not expose allow-list destinations in the versions checked; use an MCP tool or compatible TypeScript SDK that exposes destination rules when they are needed. Read [network.md](references/network.md) to match the installed schema. Do not fall back to `allow-all` after a restrictive-policy error.
+For generated or untrusted code, set `deny-all` or an explicit `allow-list` containing the required destinations. Do not depend on the permissive default. The reviewed CLI and Python high-level client do not expose destination rules, and TypeScript 1.2.0 sends an incompatible allow-list shape. Use a verified MCP/client schema with `rules`, or the public REST create path documented in the networking reference, then use the CLI/SDK for the remaining lifecycle. Read [network.md](references/network.md) to match the installed schema. Do not fall back to `allow-all` after a restrictive-policy error.
 
 ## References
 

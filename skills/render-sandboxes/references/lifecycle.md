@@ -43,6 +43,17 @@ Download wanted artifacts and logs before termination. If the filesystem must be
 
 Put SDK termination in `finally` and preserve the ID if cleanup fails. Python documents termination as idempotent for an already-terminated ID (204); a never-valid ID errors. CLI stop without `--confirm` only previews. Verify actual state after cleanup rather than treating a local message as proof. Terminate only resources owned by this task or explicitly included in the request.
 
+## Recover from failures
+
+Record the workspace, creation time, requested lifetime, and returned IDs as the run proceeds. Preserve the original operation error separately from any cleanup error. The SDK examples demonstrate the normal lifecycle; they are not durable job supervisors and cannot guarantee cleanup if the host process is killed.
+
+- **Create times out before returning an ID:** Report an unknown outcome. Do not repeat create automatically. Check request logs and paginated workspace listings, including terminated resources, to reconcile the original request. A timestamp or similar configuration alone is not proof of ownership. Continue or terminate only an ID attributable to this task. If attribution remains ambiguous, preserve the request time and inputs, report unresolved cleanup, and ask for the missing evidence or operator help. The explicit lifetime bounds resource lifetime but is not proof of termination.
+- **Readiness or another read fails:** Retry transient transport errors, HTTP 429, or 5xx within a deadline, with bounded backoff and `Retry-After` where provided. Stop on authentication, permission, or validation errors and report the cause. A failed read must not trigger a replacement create. On deadline expiry, clean up the saved task-owned ID.
+- **Execution is interrupted:** A missing terminal exit event is an incomplete result. Do not replay a potentially side-effecting command without checking its outcome. Aborting a stream does not terminate the sandbox. Retrieve needed outputs if possible, then explicitly terminate when the run is over.
+- **Termination fails or its response is lost:** Retain the exact owned ID, inspect its state, and retry termination only for that ID within a small bounded budget, such as three attempts with backoff. Termination is idempotent for an already-terminated sandbox. Preserve both errors if the workload and cleanup fail; do not claim success while cleanup is unresolved.
+
+Verify `terminated` through an exact-ID read, or an exact match in a paginated terminated listing if the client's get helper cannot return terminated resources. An unexplained 404, an authentication failure, a CLI preview, or elapsed lifetime is not sufficient evidence. If verification still fails, report the ID, last confirmed state, and next cleanup action. Never delete an unrelated sandbox to make a workspace look clean.
+
 ## When to choose another product
 
 A sandbox fits a bounded run that needs a disposable OS environment. Choose based on how work arrives and how it must continue:

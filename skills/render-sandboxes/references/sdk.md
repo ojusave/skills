@@ -66,7 +66,7 @@ For live SSE, use a streaming HTTP client and a deadline. The generated Python `
 
 ## Create, wait, copy, execute, retrieve, terminate
 
-Both examples use an existing local `input.txt` and write `output.txt`. The command copies the input inside the sandbox; the host verifies the downloaded bytes. The five-minute lifetime and one-minute readiness deadline are example choices, not platform defaults.
+Both examples use an existing local `input.txt` and write `output.txt`. They demonstrate the normal lifecycle, not automatic retry or durable recovery. Use the [failure recovery procedure](lifecycle.md#recover-from-failures) for timeouts, interruptions, and cleanup errors; a create response lost before an ID is returned cannot be handled by these `finally` blocks. The command copies the input inside the sandbox; the host verifies the downloaded bytes. The five-minute lifetime and one-minute readiness deadline are example choices, not platform defaults.
 
 Python:
 
@@ -129,6 +129,8 @@ const sandbox = await sandboxes.create({
   networkPolicy: { default: "deny-all" },
 });
 console.log(`sandbox: ${sandbox.id}`);
+let operationFailed = false;
+let operationError: unknown;
 try {
   let ready = false;
   for (let attempt = 0; attempt < 40; attempt++) {
@@ -160,13 +162,27 @@ try {
   const downloaded = await sandboxes.download(sandbox.id, "/tmp/output.txt");
   await writeFile("output.txt", downloaded.data);
   if (!downloaded.data.equals(expected)) throw new Error("Downloaded output differs from input");
+} catch (error) {
+  operationFailed = true;
+  operationError = error;
+  throw error;
 } finally {
-  await sandboxes.terminate(sandbox.id);
+  try {
+    await sandboxes.terminate(sandbox.id);
+  } catch (cleanupError) {
+    if (operationFailed) {
+      throw new AggregateError(
+        [operationError, cleanupError],
+        `Sandbox ${sandbox.id}: operation and cleanup both failed`,
+      );
+    }
+    throw new Error(`Cleanup failed for sandbox ${sandbox.id}`, { cause: cleanupError });
+  }
 }
 ```
 
 The SDK command string runs through `bash -c`. Nonzero exits arrive as `SandboxExecExit` in Python or `{type: "exit", exit_code}` in TypeScript; they are not automatically thrown exceptions. Stream/transport errors can throw. Consume the terminal event and check it explicitly.
 
-After termination, query the sandbox state using the saved ID. If cleanup fails, retain that ID and report the failure. Aborting a TypeScript stream only cancels the client request in the reviewed source; it does not call `terminate`. Do not describe stream cancellation as verified remote process termination.
+After termination, query the sandbox state using the saved ID. If cleanup fails, retain that ID and the original operation error, then follow the bounded recovery procedure before reporting final status. Aborting a TypeScript stream only cancels the client request in the reviewed source; it does not call `terminate`. Do not describe stream cancellation as verified remote process termination.
 
 For persistence, insert the required [snapshot](snapshots.md) before termination and wait for availability. The upstream Python example demonstrates file transfer and cleanup but does not wait for readiness; the examples here add that check from the current docs.

@@ -70,7 +70,7 @@ render ea sandboxes stop sbx-... --confirm
 render ea sandboxes list --status terminated --output json
 ```
 
-Inspect the downloaded result, the command exit code, and the target ID's cleanup status. Stop polling on terminal failure; after a timeout or lost response, inspect the existing ID before creating another sandbox.
+Inspect the downloaded result, the command exit code, and the target ID's cleanup status. Stop polling on terminal failure; after a timeout or lost response, follow [failure recovery](lifecycle.md#recover-from-failures). If no ID was returned, report the unknown outcome and reconcile the request before creating another sandbox.
 
 `exec` reconstructs a shell-quoted command from argv. Use `-- echo hello` for a simple command. For shell operators, pass an explicit shell, for example `-- bash -c 'printf hello > /tmp/output.txt'`. Passing one quoted string containing the whole simple command can instead quote it as one executable token.
 

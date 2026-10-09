@@ -2,9 +2,25 @@
 
 Sources: CLI [sandbox help](https://github.com/render-oss/cli/blob/c4d106cfdaf8eec6d23475155e43f4baeeed2013/cmd/sandbox.go), [group help](https://github.com/render-oss/cli/blob/c4d106cfdaf8eec6d23475155e43f4baeeed2013/cmd/sandboxgroups.go), [status schema](https://github.com/render-oss/cli/blob/c4d106cfdaf8eec6d23475155e43f4baeeed2013/pkg/client/sandboxes/sandboxes_gen.go), Python [client](https://github.com/render-oss/sdk/blob/4699a1035c5fa4ab0df95b44dc9344368f620dec/python/render/experimental/sandbox/client.py), and [Sandboxes docs](https://render.com/docs/sandboxes.md).
 
+## Operation coverage
+
+The CLI and high-level SDK paths cover the core sandbox lifecycle and snapshots. They are not the entire sandbox API. Use the connected MCP tool schema for its exact coverage; a connector does not imply every operation is exposed.
+
+| Requested operation | Available path and boundary |
+|---|---|
+| Create, list, inspect, execute, upload/download, terminate | CLI and SDK paths in [cli.md](cli.md) and [sdk.md](sdk.md). CLI inspection uses the list response; SDKs have a read-by-ID method. |
+| Snapshot create, list, inspect, delete, and restore | CLI and both SDKs; restore creates a new sandbox. See [snapshots.md](snapshots.md). |
+| List sandbox groups | CLI and both SDKs. The reviewed public interfaces do not expose group create/update/delete methods. |
+| Read execution history or a specific execution record | Public API schema defines list/retrieve endpoints; the reviewed high-level SDKs and sandbox CLI subcommands have no dedicated method. See [SDK/API gaps](sdk.md#operations-outside-the-high-level-sdk). |
+| Replay or follow sandbox-wide logs; list directory metadata | Public schema defines endpoints, but high-level clients do not wrap them. Confirm the endpoint is callable before relying on it. Live stdout/stderr from `exec` is already supported. |
+| Restrict outbound destinations | Requires a tool/client that accepts destination rules; see [network.md](network.md). |
+| Explicit suspend/resume, resize, or change a running sandbox's policy | Not exposed by the reviewed CLI/high-level SDK or public REST schema. Do not invent a command from a status enum. |
+
+For a request that needs an uncovered operation, inspect current public documentation and the available tool/client schema. Use a confirmed public interface or report the specific gap. Do not substitute an internal endpoint or claim full coverage from generated types. Source review is not a live operation test.
+
 ## Group and status
 
-A group scopes a workspace's sandboxes to a region and optionally an environment. CLI help says early access permits at most one default group; the SDK `list_groups` comment says at most one group, returning zero or one. Do not infer multi-group availability. Inspect the returned group and region instead of hardcoding a region.
+A group scopes a workspace's sandboxes to a region and optionally an environment. Reviewed CLI help says at most one default group; the SDK `list_groups` comment says at most one group, returning zero or one. Do not infer multi-group availability. Inspect the returned group and region instead of hardcoding a region.
 
 | Status | What the procedure does |
 |---|---|

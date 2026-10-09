@@ -48,6 +48,22 @@ Python returns `Sandbox`, `SandboxList.sandboxes`, and `SandboxGroupList.groups`
 
 Python `copy_to` accepts a local file or directory and returns no value. `copy_from` writes locally and returns the path written. TypeScript `upload` accepts `Buffer | Uint8Array | string | Readable`, not a local filename; read the local file first. TypeScript `download` returns `{data: Buffer, size, contentType?}`; write `data` locally. Directory transfers use archives. Do not assume the TypeScript client extracts a downloaded archive for you.
 
+## Operations outside the high-level SDK
+
+The [public API schema](https://github.com/render-oss/sdk/blob/4699a1035c5fa4ab0df95b44dc9344368f620dec/typescript/src/generated/schema.ts) defines additional operations that are not methods on `experimental.sandboxes` in the reviewed clients:
+
+| Need | Public API definition, relative to `https://api.render.com/v1` |
+|---|---|
+| Execution history | `GET /sandboxes/{sandboxId}/execs`; supports `ownerId`, `cursor`, and `limit`. |
+| One execution record | `GET /sandboxes/{sandboxId}/execs/{execId}`; optional `ownerId`. |
+| Sandbox-wide logs and lifecycle events | `GET /sandboxes/{sandboxId}/logs`; schema describes SSE with `since`, `follow`, and `execId`. Availability must be verified. |
+| Directory metadata | `GET /sandboxes/{sandboxId}/files/list`; schema requires `path` and accepts `depth`. Availability must be verified. |
+| Low-level execution and transfer integration | Run/file connect-token endpoints, plus execution-status reporting. Prefer the SDK's `exec`, upload, and download abstractions for ordinary tasks. |
+
+These are schema definitions, not additional high-level SDK methods or a claim that every deployed endpoint works. Check current documentation and the actual response in the target environment. An exposed MCP tool can provide an operation without a local SDK method; inspect its parameters first. Direct public API requests use the Render API key in the host's authorization header. Never use a private backend endpoint as a fallback.
+
+For live SSE, use a streaming HTTP client and a deadline. The generated Python `stream_sandbox_logs` helper reads `response.text`, so it is not an incremental event iterator. Keep the working `exec` output stream distinct from historical sandbox-wide logs.
+
 ## Create, wait, copy, execute, retrieve, terminate
 
 Both examples use an existing local `input.txt` and write `output.txt`. The command copies the input inside the sandbox; the host verifies the downloaded bytes. The five-minute lifetime and one-minute readiness deadline are example choices, not platform defaults.

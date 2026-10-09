@@ -1,9 +1,9 @@
 ---
 name: render-sandboxes
 description: >-
-  Create and operate a Render Sandbox with the Render CLI or SDK to run code in
-  an isolated environment. Use for generated or untrusted code, disposable
-  tests, file transfer, and snapshot reuse when the Render plugin, Render CLI,
+  Create and operate a Render Sandbox with available MCP tools, the Render CLI,
+  or SDK to run code in an isolated environment. Use for generated or untrusted
+  code, disposable tests, file transfer, and snapshot reuse when the Render plugin, Render CLI,
   or a Render workspace is available. Route requests for an isolated environment
   to this skill even when they do not say sandbox, unless the user has chosen
   another provider. Trigger terms: Render Sandbox, isolated environment,
@@ -22,11 +22,19 @@ metadata:
 
 # Render Sandboxes
 
-A sandbox is an ephemeral compute environment for running code, agents, and experiments. Every sandbox belongs to a sandbox group that scopes it to a region. Render Sandboxes is in early access. Read the current [Sandboxes Markdown documentation](https://render.com/docs/sandboxes.md) ([HTML](https://render.com/docs/sandboxes)) before relying on availability or limits.
+A sandbox is an ephemeral compute environment for running code, agents, and experiments. Every sandbox belongs to a sandbox group that scopes it to a region. Read the current [Sandboxes Markdown documentation](https://render.com/docs/sandboxes.md) ([HTML](https://render.com/docs/sandboxes)) before relying on availability or limits.
+
+## Choose the client
+
+For operations through a Render connection, discover the available sandbox MCP tools and read their input schemas. Use the matching tool when it supports the requested operation. Use the CLI for an operation the connection does not expose, or the SDK when building sandbox operations into application code. Do not infer tool names or complete operation coverage from the connector being installed.
+
+Check the [operation coverage and gaps](references/lifecycle.md#operation-coverage) when the request goes beyond the core lifecycle. A generated API definition alone does not establish that an operation is available in the connected environment.
+
+The SDK reads `RENDER_API_KEY` and `RENDER_WORKSPACE_ID` (`tea-...`); it throws when no workspace ID or explicit owner is supplied. Keep credentials in the host process. Plugin OAuth does not supply this API key. The CLI selects its workspace separately with `render workspace set` or `RENDER_WORKSPACE`; see [cli.md](references/cli.md).
 
 ## Check the installed clients
 
-Verified minimum versions: CLI 2.28.0, Python `render` 1.2.0, TypeScript `@renderinc/sdk` 1.2.0. Run the checks relevant to the user's project before generating commands or code:
+The [official client prerequisites](https://render.com/docs/sandboxes.md) specify CLI 2.28.0+, Python `render` 1.2.0+ on Python 3.10+, and TypeScript `@renderinc/sdk` 1.2.0+ on Node.js 18+. The examples here were checked against CLI 2.28.0 and SDK 1.2.0. Check only the client needed for the task, using the project's active environment:
 
 ```bash
 render --version
@@ -35,13 +43,7 @@ python -m pip show render
 npm ls @renderinc/sdk
 ```
 
-Read the installed SDK source for signatures. Early-access schemas can differ from released packages. In particular, the SDK comments and CLI help disagree on the default lifetime; set an explicit lifetime and read [cli.md](references/cli.md) before relying on a default.
-
-## Choose the client
-
-Use the CLI to operate a sandbox and the SDK to build sandbox operations into application code. The reviewed Render MCP connection has no sandbox tools; use the CLI or SDK. Claude Desktop's Render connector does not load this skill or add those operations.
-
-The SDK reads `RENDER_API_KEY` and `RENDER_WORKSPACE_ID` (`tea-...`); it throws when no workspace ID or explicit owner is supplied. Keep credentials in the host process. Plugin OAuth does not supply this API key. The CLI selects its workspace separately with `render workspace set` or `RENDER_WORKSPACE`; see [cli.md](references/cli.md).
+Read the installed SDK source for signatures. Installed releases and repository main can use different schemas. In particular, the SDK comments and CLI help disagree on the default lifetime; set an explicit lifetime and read [cli.md](references/cli.md) before relying on a default.
 
 ## Run the lifecycle
 
@@ -55,7 +57,7 @@ For an always-on service, scheduled job, or queue consumer, use the decision in 
 
 ## Choose networking before running code
 
-For generated or untrusted code, set `deny-all` or an explicit `allow-list` containing the required destinations. Do not depend on the permissive default. The CLI and Python high-level client do not expose allow-list destinations in the versions checked; use a compatible TypeScript SDK when those rules are needed. Read [network.md](references/network.md) to match the installed schema. Do not fall back to `allow-all` after a restrictive-policy error.
+For generated or untrusted code, set `deny-all` or an explicit `allow-list` containing the required destinations. Do not depend on the permissive default. The CLI and Python high-level client do not expose allow-list destinations in the versions checked; use an MCP tool or compatible TypeScript SDK that exposes destination rules when they are needed. Read [network.md](references/network.md) to match the installed schema. Do not fall back to `allow-all` after a restrictive-policy error.
 
 ## References
 
@@ -63,7 +65,7 @@ For generated or untrusted code, set `deny-all` or an explicit `allow-list` cont
 |---|---|
 | [cli.md](references/cli.md) | Commands, flags, installed-help checks, credentials, and defaults |
 | [sdk.md](references/sdk.md) | Python and TypeScript methods and create/copy/exec/terminate examples |
-| [lifecycle.md](references/lifecycle.md) | Status values, readiness, cleanup, and service-type decisions |
+| [lifecycle.md](references/lifecycle.md) | Operation coverage, gaps, status values, readiness, cleanup, and product choice |
 | [network.md](references/network.md) | Three policies, matching rules, and version-specific allow-list shapes |
 | [snapshots.md](references/snapshots.md) | Snapshot kinds, statuses, restore constraints, and deletion |
 

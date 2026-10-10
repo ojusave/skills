@@ -16,7 +16,7 @@ compatibility: >-
   enabled for Sandboxes. Check installed help and SDK types before use.
 metadata:
   author: Render
-  version: "1.0.1"
+  version: "1.0.2"
   category: sandboxes
 ---
 
